@@ -1,0 +1,24 @@
+/* IMPORTS */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
+/* STYLES */
+.home {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #FEFEFE;
+}
+
+.home__title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10vw;
+  color: #000000;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.home__title-dot {
+  color: #792262;
+}
