@@ -1,11 +1,10 @@
-import './Home.css';
+import HomeTitle from '../components/HomeTitle';
+import '../styles/Home.css';
 
 const Home = () => {
   return (
     <div className="home">
-      <h1 className="home__title">
-        Greg<span className="home__title-dot">.</span>GS
-      </h1>  
+      <HomeTitle />
     </div>
   );
 };
