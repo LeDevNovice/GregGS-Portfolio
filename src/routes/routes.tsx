@@ -6,12 +6,12 @@ const Home = React.lazy(() => import("../pages/Home"));
 const AppRoutes = () => {
   return (
     <Router>
-        <Suspense fallback={<div>Chargement...</div>}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            {/* Add more routes here during development of the project */}
-          </Routes>
-        </Suspense>
+      <Suspense fallback={<div>Chargement...</div>}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          {/* Add more routes here during development of the project */}
+        </Routes>
+      </Suspense>
     </Router>
   );
 };
