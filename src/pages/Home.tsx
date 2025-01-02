@@ -1,10 +1,11 @@
-// TODO: Add content to the Home page
+import './Home.css';
+
 const Home = () => {
   return (
-    <div>
-      <h1>Bienvenue sur mon portfolio</h1>
-      <p>Explorez mes projets, publications et plus encore.</p>
-      <p>In progress...</p>
+    <div className="homeContainer">
+      <h1 className="homeContainer__title">
+        Greg<span className="homeContainer__title-dot">.</span>GS
+      </h1>  
     </div>
   );
 };
