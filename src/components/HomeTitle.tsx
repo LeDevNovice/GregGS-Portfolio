@@ -4,11 +4,11 @@ import { useState } from 'react';
 import '../styles/Home.css';
 
 const HomeTitle = () => {
-  const [showMenu, setShowMenu] = useState(false);
+  const [animationStage, setAnimationStage] = useState('intro');
 
   return (
     <div className="home__container">
-      {!showMenu ? (
+      { animationStage === 'intro' && (
         <motion.h1 
           className="home__title"
           initial={{ opacity: 0 }}
@@ -20,17 +20,14 @@ const HomeTitle = () => {
             initial={{ scale: 1 }}
             animate={{
               scale: [1, 1.5, 1, 1.5, 1, 1, 1000], 
-              backgroundColor: ["#792262", "#792262", "#792262", "#792262", "#792262"],
-              transitionEnd: {
-                scale: 1000, 
-              },
+              backgroundColor: "#792262",
             }}
             transition={{
               times: [0, 0.1, 0.2, 0.3, 0.4, 0.8, 3], 
               duration: 5, 
               delay: 6,
             }}
-            onAnimationComplete={() => setShowMenu(true)}
+            onAnimationComplete={() => setAnimationStage('shrink')}
             style={{
               display: 'inline-block',
               width: '0.2em',
@@ -39,7 +36,26 @@ const HomeTitle = () => {
             }}
           ></motion.span>GS
         </motion.h1>
-      ) : (
+      )}
+      { animationStage === 'shrink' && (
+        <motion.div
+          initial={{ scale: 1000 }} // Début de l'étape de réduction
+          animate={{ scale: 1 }} // Réduction progressive
+          transition={{ duration: 5, ease: "linear" }}
+          onAnimationComplete={() => setAnimationStage('menu')} // Passer à l'étape du menu
+          style={{
+            backgroundColor: "#792262",
+            borderRadius: "50%",
+            position: "absolute",
+            width: "100%",
+            height: "100%",
+            top: "0",
+            left: "0",
+            zIndex: 2,
+          }}
+        />
+      )}
+      {animationStage === 'menu' && (
         <motion.div
           className="menu__container"
           initial={{ opacity: 0 }}
