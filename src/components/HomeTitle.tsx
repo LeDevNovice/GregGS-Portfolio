@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import '../styles/Home.css';
 
 const HomeTitle = () => {
-  const [startDotAnimation, setStartDotAnimation] = useState(false);
+  const [startExpandDotAnimation, setStartExpandDotAnimation] = useState(false);
 
   return (
     <motion.h1 
@@ -13,14 +13,14 @@ const HomeTitle = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 5, delay: 1, ease: "linear" }}
       onAnimationComplete={() => {
-        setStartDotAnimation(true);
+        setStartExpandDotAnimation(true);
       }}
     >
       Greg<motion.span 
         className="home__title-dot"
         initial={{ scale: 1 }}
         animate={
-          startDotAnimation
+          startExpandDotAnimation
             ? { scale: 300 }
             : {}
         }
