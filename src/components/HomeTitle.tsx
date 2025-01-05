@@ -3,6 +3,40 @@ import { motion } from 'framer-motion';
 
 import '../styles/Home.css';
 
+const dotVariants = {
+  hidden: {
+    scale: 1,
+    x: 0,
+  },
+  wiggle1: {
+    x: [0, 5, -5, 5, -5, 0],
+    transition: {
+      duration: 0.3,
+      ease: 'easeInOut',
+    },
+  },
+  pause: {
+    x: 0,
+    transition: {
+      ease: 'linear',
+    },
+  },
+  wiggle2: {
+    x: [0, 5, -5, 5, -5, 0],
+    transition: {
+      duration: 0.3,
+      ease: 'easeInOut',
+    },
+  },
+  expand: {
+    scale: 300,
+    transition: {
+      duration: 3,
+      ease: 'easeIn',
+    },
+  },
+};
+
 const HomeTitle = () => {
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [showEnterMessage, setShowEnterMessage] = useState(false);
