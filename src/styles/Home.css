@@ -5,9 +5,11 @@
 .home {
   position: relative;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  width: 100%;
   background-color: #FEFEFE;
 }
 
@@ -25,4 +27,14 @@
   height: 0.2em;
   border-radius: 50%;
   background-color: #792262;
+}
+
+.home__enter-message {
+  margin-top: 2rem;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.5vw;
+  font-style: italic;
+  color: #792262;
+  text-align: center;
+  user-select: none;
 }
