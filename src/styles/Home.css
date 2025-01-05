@@ -20,5 +20,9 @@
 }
 
 .home__title-dot {
-  color: #792262;
+  display: inline-block; 
+  width: 0.2em;              
+  height: 0.2em;
+  border-radius: 50%;
+  background-color: #792262;
 }
