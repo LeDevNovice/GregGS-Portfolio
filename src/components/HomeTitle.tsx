@@ -19,7 +19,7 @@ const HomeTitle = () => {
 
   return (
     <div 
-      className="home" 
+      className="home__container" 
       onClick={handleUserInteraction} // Détection du clic
     >
       <motion.h1 
