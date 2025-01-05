@@ -40,3 +40,17 @@
   text-align: center;
   user-select: none;
 }
+
+@media (max-width: 768px) {
+  .home__enter-message {
+    font-size: 3vw;
+    top: 55vh
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .home__enter-message {
+    font-size: 3vw;
+    top: 60vh
+  }
+}
