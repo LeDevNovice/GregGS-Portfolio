@@ -1,15 +1,21 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
 import '../styles/Home.css';
 
 const HomeTitle = () => {
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [showEnterMessage, setShowEnterMessage] = useState(false);
   const [startExpandDotAnimation, setStartExpandDotAnimation] = useState(false);
 
   const handleUserInteraction = () => {
     setStartExpandDotAnimation(true);
   };
+
+  useEffect(() => {
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    setIsTouchDevice(isTouch);
+  }, []);
 
   return (
     <div 
@@ -51,7 +57,9 @@ const HomeTitle = () => {
           ease: 'easeInOut' 
         }}
       >
-        Click / Touch the screen to enter
+        {isTouchDevice
+          ? "Touch the screen to enter"
+          : "Click the screen to enter"}
       </motion.p>
     )}
     </div>
