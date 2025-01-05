@@ -19,6 +19,7 @@
   color: #000000;
   text-transform: uppercase;
   text-align: center;
+  margin: 0;
 }
 
 .home__title-dot {
@@ -30,7 +31,8 @@
 }
 
 .home__enter-message {
-  margin-top: 2rem;
+  position: absolute;
+  top: 65vh;
   font-family: 'Montserrat', sans-serif;
   font-size: 1.5vw;
   font-style: italic;

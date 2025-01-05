@@ -14,9 +14,7 @@ const HomeTitle = () => {
   return (
     <div 
       className="home" 
-      onClick={handleUserInteraction} // Détection du clic pour mobiles
-      onKeyDown={handleUserInteraction} // Détection des touches pour desktop
-      tabIndex={0} // Rend le div focusable pour capturer les événements clavier
+      onClick={handleUserInteraction} // Détection du clic
     >
       <motion.h1 
         className="home__title"
