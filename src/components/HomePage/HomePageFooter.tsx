@@ -1,6 +1,6 @@
 import '../../styles/HomePage.css';
 
-function Footer() {
+function HomePageFooter() {
   return (
     <div className="homepage__footer">
       <span className="homepage__footer-content">Le Dev Novice © 2025</span>
@@ -8,4 +8,4 @@ function Footer() {
   );
 }
 
-export default Footer;
+export default HomePageFooter;

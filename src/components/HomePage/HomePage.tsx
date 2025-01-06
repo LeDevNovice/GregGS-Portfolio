@@ -1,9 +1,9 @@
-import Footer from "./Footer";
+import HomePageFooter from "./HomePageFooter";
 
 const HomePage = () => {
   return (
     <>
-      <Footer />
+      <HomePageFooter />
     </>
   );
 }
