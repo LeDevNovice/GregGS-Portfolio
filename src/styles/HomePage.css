@@ -1,0 +1,11 @@
+.homepage__footer {
+  position: absolute;
+  bottom: 10px;
+  width: 100%;
+  text-align: center;
+}
+  
+.footer-content {
+  font-size: 1vw;
+  font-style: italic;
+} 
