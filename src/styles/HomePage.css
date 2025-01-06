@@ -1,3 +1,22 @@
+.homepage__background {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  min-height: 100vh;
+  opacity: 1;
+}
+
+.homepage__socials {
+  position: fixed;
+  padding: 8px 0px 0px 8px;
+}
+
+.homepage__socials-icon {
+  color: #792262;
+  font-size: 2vw;
+  padding-right: 16px;
+}
+
 .homepage__footer {
   position: absolute;
   bottom: 10px;
@@ -5,7 +24,7 @@
   text-align: center;
 }
   
-.footer-content {
+.homepage__footer-content {
   font-size: 1vw;
   font-style: italic;
 } 
