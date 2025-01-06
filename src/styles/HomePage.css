@@ -39,6 +39,37 @@
   letter-spacing: 4px;
 }
 
+.homepage__menu {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  margin-left: 10vw;
+}
+  
+.homepage__menu-item {
+  padding-bottom: 24px;
+}
+  
+.homepage__menu-item--text {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.5vw;
+  letter-spacing: 4px;
+  text-decoration: none;
+  color: inherit;
+}
+  
+.homepage__menu-item--text:hover {
+  color: #792262;
+}
+  
+.homepage__menu-item:nth-child(2) {
+  transform: translateX(5vw);
+}
+  
+.homepage__menu-item:nth-child(3) {
+  transform: translateX(10vw);
+}
+
 .homepage__background {
   position: fixed;
   bottom: 0;
