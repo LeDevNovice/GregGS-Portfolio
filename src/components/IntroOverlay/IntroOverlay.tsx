@@ -1,15 +1,27 @@
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
 
-import '../styles/Home.css';
+import IntroTitle from './IntroTitle';
+import IntroDot from './IntroDot';
+import IntroEnterMessage from './IntroEnterMessage';
+import '../../styles/Overlay.css';
 
 const dotVariants = {
   hidden: {
     scale: 1,
     x: 0,
+    opacity: 0,
+  },
+  fadeIn: {
+    opacity: 1, 
+    transition: {
+      duration: 5,
+      ease: 'easeInOut',
+      delay: 0.5,
+    },
   },
   wiggle1: {
     x: [0, 5, -5, 5, -5, 0],
+    opacity: 1, 
     transition: {
       duration: 0.3,
       ease: 'easeInOut',
@@ -17,12 +29,14 @@ const dotVariants = {
   },
   pause: {
     x: 0,
+    opacity: 1, 
     transition: {
       ease: 'linear',
     },
   },
   wiggle2: {
     x: [0, 5, -5, 5, -5, 0],
+    opacity: 1, 
     transition: {
       duration: 0.3,
       ease: 'easeInOut',
@@ -30,26 +44,41 @@ const dotVariants = {
   },
   secondPause: {
     x: 0,
+    opacity: 1, 
     transition: {
       ease: 'linear',
     },
   },
   expand: {
     scale: 300,
+    opacity: 1, 
     transition: {
       duration: 3,
       ease: 'easeIn',
     },
   },
+  contract: {
+    scale: 0,
+    opacity: 1, 
+    transition: {
+      duration: 1.5,
+      ease: 'easeOut',
+    },
+  },
 };
 
-const HomeTitle = () => {
+interface IntroOverlayProps {
+  onFinish?: () => void;
+}
+
+const IntroOverlay = ({ onFinish }: IntroOverlayProps) => {
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [showEnterMessage, setShowEnterMessage] = useState(false);
-  const [dotAnimationState, setDotAnimationState] = useState('hidden'); 
+  const [dotAnimationState, setDotAnimationState] = useState('fadeIn'); 
   const [hasStartedWiggle, setHasStartedWiggle] = useState(false);
+  const [showTitle, setShowTitle] = useState(true);
+  const [hasOverlayBackground, setHasOverlayBackground] = useState(true);
 
-  // TODO: Détection tactile a mettre dans un hook
   useEffect(() => {
     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     setIsTouchDevice(isTouch);
@@ -79,53 +108,33 @@ const HomeTitle = () => {
       }, 1000);
     } else if (previousVariant === 'secondPause') {
       setDotAnimationState('expand');
+    } else if (previousVariant === 'expand') {
+      setShowTitle(false);
+      setHasOverlayBackground(false);
+      setDotAnimationState('contract');
+    } else if (previousVariant === 'contract') {
+      if (onFinish) onFinish();
     }
   };
 
   return (
     <div 
-      className="home__container" 
+      className="overlay__container" 
       onClick={handleUserInteraction}
+      style={{
+        backgroundColor: hasOverlayBackground ? '#FEFEFE' : 'transparent'
+      }}
     >
-      <motion.h1 
-        className="home__title"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 5, delay: 1, ease: "linear" }}
-        onAnimationComplete={handleTitleAnimationComplete}
-      >
-        Greg<motion.span 
-          className="home__title-dot"
-          variants={dotVariants}
-          initial="hidden"
-          animate={dotAnimationState}
-          transition={{ 
-            duration: 3, 
-            ease: 'easeIn' 
-          }}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          onAnimationComplete={(definition: any) => handleDotAnimationComplete(definition)}
-        />
-        GS
-      </motion.h1> 
-    {showEnterMessage && dotAnimationState === 'hidden' && (
-      <motion.p
-        className="home__enter-message"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0, 1, 0] }}
-        transition={{ 
-          duration: 2, 
-          repeat: Infinity, 
-          ease: 'easeInOut' 
-        }}
-      >
-        {isTouchDevice
-          ? "Touch the screen to enter"
-          : "Click the screen to enter"}
-      </motion.p>
+      <div className='overlay__title-wrapper'>
+        {showTitle && (<IntroTitle text='Greg' handleTitleAnimationComplete={handleTitleAnimationComplete} />)}
+        <IntroDot variant={dotVariants} animationState={dotAnimationState} handleDotAnimationComplete={handleDotAnimationComplete}/>
+        {showTitle && (<IntroTitle text='GS' handleTitleAnimationComplete={handleTitleAnimationComplete} />)}
+      </div>
+      {showEnterMessage && dotAnimationState === 'fadeIn' && (
+      <IntroEnterMessage isTouchDevice={isTouchDevice} />
     )}
     </div>
   );
 };
 
-export default HomeTitle;
+export default IntroOverlay;

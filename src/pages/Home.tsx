@@ -1,13 +1,18 @@
-import HomeTitle from '../components/HomeTitle';
-import '../styles/Home.css';
+import { useState } from 'react';
+import IntroOverlay from './../components/IntroOverlay/IntroOverlay';
+import HomePage from '../components/HomePage/HomePage';
 
-const Home = () => {
+export default function Home() {
+  const [showIntro, setShowIntro] = useState(true);
+
   return (
-    <div className="home">
-      <HomeTitle />
-    </div>
+    <>
+      <HomePage />
+      {showIntro && (
+        <IntroOverlay 
+          onFinish={() => setShowIntro(false)} 
+        />
+      )}
+    </>
   );
-};
-  
-export default Home;
-  
+}
