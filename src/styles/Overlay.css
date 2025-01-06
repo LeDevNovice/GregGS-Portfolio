@@ -1,11 +1,11 @@
-/* IMPORTS */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 
-/* STYLES */
-.home__container {
-  position: relative;
+.overlay__container {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
@@ -13,24 +13,34 @@
   background-color: #FEFEFE;
 }
 
-.home__title {
+.overlay__title-wrapper {
+  display: inline-block; 
+  white-space: nowrap; 
+  text-align: center; 
+}
+
+.overlay__title {
+  display: inline-block;
   font-family: 'Montserrat', sans-serif;
   font-size: 10vw;
+  line-height: 1;
   color: #000000;
   text-transform: uppercase;
   text-align: center;
   margin: 0;
+  vertical-align: baseline;
 }
 
-.home__title-dot {
+.overlay__title-dot {
   display: inline-block; 
-  width: 0.2em;              
-  height: 0.2em;
+  width: 2.5vw;              
+  height: 2.5vw;
   border-radius: 50%;
   background-color: #792262;
+  vertical-align: baseline;
 }
 
-.home__enter-message {
+.overlay__enter-message {
   position: absolute;
   top: 65vh;
   font-family: 'Montserrat', sans-serif;
@@ -42,14 +52,14 @@
 }
 
 @media (max-width: 768px) {
-  .home__enter-message {
+  .overlay__enter-message {
     font-size: 3vw;
     top: 55vh
   }
 }
 
 @media (min-width: 769px) and (max-width: 1024px) {
-  .home__enter-message {
+  .overlay__enter-message {
     font-size: 3vw;
     top: 60vh
   }
