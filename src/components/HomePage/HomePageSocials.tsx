@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faGithub,
@@ -7,22 +8,30 @@ import {
 
 import '../../styles/HomePage.css';
 
-function HomePageSocials() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function HomePageSocials({ animateExit }: any) {
   return (
-    <section className='homepage__socials'>
-      <FontAwesomeIcon
-        className='homepage__socials-icon'
-        icon={faGithub}
-      />
-      <FontAwesomeIcon
-        className='homepage__socials-icon'
-        icon={faLinkedin}
-      />
-      <FontAwesomeIcon
-        className='homepage__socials-icon'
-        icon={faTwitter}
-      />
-    </section>
+    <motion.section
+      className="homepage__socials"
+      initial={{ opacity: 1 }}
+      animate={{ opacity: animateExit ? 0 : 1 }}
+      transition={{ duration: 1 }}
+    >
+      <section className='homepage__socials'>
+        <FontAwesomeIcon
+          className='homepage__socials-icon'
+          icon={faGithub}
+        />
+        <FontAwesomeIcon
+          className='homepage__socials-icon'
+          icon={faLinkedin}
+        />
+        <FontAwesomeIcon
+          className='homepage__socials-icon'
+          icon={faTwitter}
+        />
+      </section>
+    </motion.section>
   );
 }
 
