@@ -14,7 +14,7 @@ function HomePageBackground({ animateExit }: Props) {
       className='homepage__background'
       initial={{ x: '0%', opacity: 1 }}
       animate={animateExit ? { x: '-50%', opacity: 0 } : { x: '0%', opacity: 1 }}
-      transition={{ duration: 1.5, ease: "easeInOut" }}
+      transition={{ duration: 3, ease: [0.11, 0, 0.5, 0] }}
     />
   );
 }

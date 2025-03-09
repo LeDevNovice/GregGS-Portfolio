@@ -9,7 +9,7 @@ function HomePageFooter({ animateExit }: any) {
       className="homepage__footer"
       initial={{ opacity: 1 }}
       animate={{ opacity: animateExit ? 0 : 1 }}
-      transition={{ duration: 1 }}
+      transition={{ duration: 0.5 }}
     >
       <div className="homepage__footer">
         <span className="homepage__footer-content">Le Dev Novice © 2025</span>

@@ -10,7 +10,7 @@ function HomePageTitle({ animateExit }: any) {
       className="homepage__title"
       initial={{ opacity: 1 }}
       animate={{ opacity: animateExit ? 0 : 1 }}
-      transition={{ duration: 1 }}
+      transition={{ duration: 0.85 }}
     >
       <section className="homepage__title">
         <h1 className='homepage__title-name'>

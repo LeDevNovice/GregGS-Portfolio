@@ -15,7 +15,7 @@ function HomePageSocials({ animateExit }: any) {
       className="homepage__socials"
       initial={{ opacity: 1 }}
       animate={{ opacity: animateExit ? 0 : 1 }}
-      transition={{ duration: 1 }}
+      transition={{ duration: 0.75 }}
     >
       <section className='homepage__socials'>
         <FontAwesomeIcon

@@ -9,20 +9,22 @@ import HomePageTitle from "./HomePageTitle";
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const [startTransition, setStartTransition] = useState(false);
+  const [startFadeOut, setStartFadeOut] = useState(false);
+  const [startBgAnimation, setStartBgAnimation] = useState(false);
 
   const handleNavigate = () => {
-    setStartTransition(true);
-    setTimeout(() => navigate('/about'), 1600);
+    setStartFadeOut(true);
+    setTimeout(() => setStartBgAnimation(true), 750);
+    setTimeout(() => navigate('/about'), 5000);
   };
 
   return (
     <div className="homepage">
-      <HomePageTitle animateExit={startTransition} />
-      <HomePageSocials animateExit={startTransition} />
-      <HomePageMenu animateExit={startTransition} onAboutClick={handleNavigate} />
-      <HomePageFooter animateExit={startTransition} />
-      <HomePageBackground animateExit={startTransition} />
+      <HomePageTitle animateExit={startFadeOut} />
+      <HomePageSocials animateExit={startFadeOut} />
+      <HomePageMenu animateExit={startFadeOut} onAboutClick={handleNavigate} />
+      <HomePageFooter animateExit={startFadeOut} />
+      <HomePageBackground animateExit={startBgAnimation} />
     </div>
   );
 }
