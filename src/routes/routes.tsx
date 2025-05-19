@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import React, { Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
+import Publications from "../pages/Publications";
 
 const Home = React.lazy(() => import("../pages/Home"));
 const About = React.lazy(() => import("../pages/About"));
@@ -13,6 +14,7 @@ const AnimatedRoutes = () => {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
+        <Route path="/publications" element={<Publications />} />
       </Routes>
     </AnimatePresence>
   );
