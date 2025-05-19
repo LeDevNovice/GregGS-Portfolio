@@ -30,7 +30,6 @@ export default function CardCarousel() {
   const recalc = () => {
     if (!containerRef.current) return;
     const cw = containerRef.current.clientWidth;
-    // somme des largeurs+gaps avant activeIndex
     const beforeWidth = activeIndex * (INACTIVE_W + GAP);
     // décalage pour centrer l'active
     const targetX = beforeWidth - (cw/2 - ACTIVE_W/2);
