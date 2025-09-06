@@ -11,14 +11,18 @@
   min-height: 100vh;
   width: 100%;
   background-color: #FEFEFE;
+  transition: background-color 0.5s ease-out;
+  overflow: hidden;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
-
 .overlay__title-wrapper {
   display: inline-block; 
   white-space: nowrap; 
-  text-align: center; 
+  text-align: center;
+  position: relative;
+  z-index: 1;
 }
-
 .overlay__title {
   display: inline-block;
   font-family: 'Montserrat', sans-serif;
@@ -29,8 +33,9 @@
   text-align: center;
   margin: 0;
   vertical-align: baseline;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
-
 .overlay__title-dot {
   display: inline-block; 
   width: 2.5vw;              
@@ -38,8 +43,16 @@
   border-radius: 50%;
   background-color: #792262;
   vertical-align: baseline;
+  position: relative;
+  transform-origin: center center;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
-
+.overlay__title-dot[style*="scale"] {
+  z-index: 9999 !important;
+  transform-style: preserve-3d;
+}
 .overlay__enter-message {
   position: absolute;
   top: 65vh;
@@ -49,18 +62,85 @@
   color: #792262;
   text-align: center;
   user-select: none;
+  animation: pulse 2s ease-in-out infinite;
 }
 
-@media (max-width: 768px) {
-  .overlay__enter-message {
-    font-size: 3vw;
-    top: 55vh
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
   }
 }
 
+.overlay__container:focus-visible {
+  outline: 2px solid #792262;
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay__title-dot,
+  .overlay__title,
+  .overlay__enter-message {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+  }
+}
+@media (max-width: 768px) {
+  .overlay__title {
+    font-size: 12vw;
+  }
+  
+  .overlay__title-dot {
+    width: 3.5vw;
+    height: 3.5vw;
+  }
+  
+  .overlay__enter-message {
+    font-size: 3vw;
+    top: 55vh;
+  }
+}
 @media (min-width: 769px) and (max-width: 1024px) {
   .overlay__enter-message {
-    font-size: 3vw;
-    top: 60vh
+    font-size: 2.5vw;
+    top: 60vh;
   }
+}
+@media (min-width: 1920px) {
+  .overlay__title {
+    font-size: 8vw;
+  }
+  
+  .overlay__title-dot {
+    width: 2vw;
+    height: 2vw;
+    max-width: 40px;
+    max-height: 40px;
+  }
+  
+  .overlay__enter-message {
+    font-size: 1.2vw;
+  }
+}
+
+.intro-overlay-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  pointer-events: auto;
+}
+.intro-overlay-wrapper[style*="pointer-events: none"] {
+  pointer-events: none !important;
 }

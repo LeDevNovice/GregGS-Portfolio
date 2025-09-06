@@ -1,28 +1,31 @@
-import { motion, Variants } from "framer-motion";
-
+import { motion } from "framer-motion";
+import { IntroDotProps } from '../../types';
 import '../../styles/Overlay.css';
 
-interface IntroDotProps {
-    variant: Variants
-    animationState: string
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    handleDotAnimationComplete: (definition: any) => void}
+const IntroDot: React.FC<IntroDotProps> = ({ 
+  variant, 
+  animationState, 
+  handleDotAnimationComplete 
+}) => {
+  const onAnimationComplete = (): void => {
+    handleDotAnimationComplete(animationState);
+  };
 
-const IntroDot = ({variant, animationState, handleDotAnimationComplete}: IntroDotProps) => {
   return (
     <motion.span 
-          className="overlay__title-dot"
-          variants={variant}
-          initial="hidden"
-          animate={animationState}
-          transition={{ 
-            duration: 3, 
-            ease: 'easeIn' 
-          }}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          onAnimationComplete={(definition: any) => handleDotAnimationComplete(definition)}
-        />
-  )
-}
+      className="overlay__title-dot"
+      variants={variant}
+      initial="hidden"
+      animate={animationState}
+      onAnimationComplete={onAnimationComplete}
+      style={{
+        willChange: 'transform, opacity',
+        zIndex: animationState === 'expand' || animationState === 'contract' ? 9999 : 1,
+      }}
+      role="presentation"
+      aria-hidden="true"
+    />
+  );
+};
 
 export default IntroDot;
