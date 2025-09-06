@@ -1,10 +1,10 @@
 import { motion } from 'framer-motion';
 
+import { HomePageTitleProps } from '../../types';
+
 import '../../styles/HomePage.css';
 
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function HomePageTitle({ animateExit }: any) {
+const HomePageTitle: React.FC<HomePageTitleProps> = ({ animateExit }) => {
   return (
     <motion.section
       className="homepage__title"
@@ -23,6 +23,6 @@ function HomePageTitle({ animateExit }: any) {
       </section>
     </motion.section>
   );
-}
+};
 
 export default HomePageTitle;

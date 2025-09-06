@@ -1,21 +1,26 @@
 import { motion } from 'framer-motion';
 
+import { HomePageFooterProps } from '../../types';
+
 import '../../styles/HomePage.css';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function HomePageFooter({ animateExit }: any) {
+const HomePageFooter: React.FC<HomePageFooterProps> = ({ animateExit }) => {
+  const currentYear = new Date().getFullYear();
+  
   return (
-    <motion.div
+    <motion.footer
       className="homepage__footer"
       initial={{ opacity: 1 }}
       animate={{ opacity: animateExit ? 0 : 1 }}
       transition={{ duration: 0.5 }}
+      role="contentinfo"
+      aria-label="Pied de page"
     >
-      <div className="homepage__footer">
-        <span className="homepage__footer-content">Le Dev Novice © 2025</span>
-      </div>
-    </motion.div>
+      <span className="homepage__footer-content">
+        Le Dev Novice © {currentYear}
+      </span>
+    </motion.footer>
   );
-}
+};
 
 export default HomePageFooter;
