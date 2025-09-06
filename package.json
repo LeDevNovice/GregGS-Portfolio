@@ -7,7 +7,12 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch",
+    "lint:types": "tsc --noEmit && eslint . --ext .ts,.tsx",
+    "validate": "npm run type-check && npm run lint",
+    "validate:full": "npm run validate && npm run build"
   },
   "dependencies": {
     "@fortawesome/free-brands-svg-icons": "^6.7.2",

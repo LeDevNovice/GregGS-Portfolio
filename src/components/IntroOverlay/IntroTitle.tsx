@@ -1,21 +1,37 @@
-import { motion } from "framer-motion"
+import { motion } from "framer-motion";
+
+import { IntroTitleProps } from '../../types';
 
 import '../../styles/Overlay.css';
 
-interface IntroTitleProps {
-    text: string
-    handleTitleAnimationComplete: () => void}
+const IntroTitle: React.FC<IntroTitleProps> = ({ 
+  text, 
+  handleTitleAnimationComplete 
+}) => {
+  const animationConfig = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    transition: { 
+      duration: 5, 
+      delay: 1, 
+      ease: "linear" as const
+    }
+  };
 
-const IntroTitle = ({text, handleTitleAnimationComplete}: IntroTitleProps) => {
   return (
     <motion.h1 
-        className="overlay__title"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 5, delay: 1, ease: "linear" }}
-        onAnimationComplete={handleTitleAnimationComplete}
-    > { text } </motion.h1>
-  )
-}
+      className="overlay__title"
+      initial={animationConfig.initial}
+      animate={animationConfig.animate}
+      transition={animationConfig.transition}
+      onAnimationComplete={handleTitleAnimationComplete}
+      role="heading"
+      aria-level={1}
+      aria-label={`Partie du nom: ${text}`}
+    >
+      {text}
+    </motion.h1>
+  );
+};
 
 export default IntroTitle;
