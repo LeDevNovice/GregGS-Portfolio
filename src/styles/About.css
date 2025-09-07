@@ -11,68 +11,61 @@
     flex-direction: column;
 }
 
-/* Back Button */
-.about__back-button {
+/* Decorative left artwork */
+.about__left-art {
     position: fixed;
-    top: 2rem;
-    left: 2rem;
-    background: none;
-    border: 2px solid #792262;
-    color: #792262;
-    padding: 0.75rem 1.5rem;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 600;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    z-index: 100;
-    border-radius: 0;
+    left: 0;
+    top: 0;
+    height: 100vh; /* span full viewport height */
+    width: auto; /* preserve image aspect ratio */
+    max-width: 480px; /* cap width so it doesn't dominate small viewports */
+    object-fit: cover;
+    z-index: 1;
+    pointer-events: none;   
+    opacity: 0.95;
+    transform: scaleX(-1); /* effet miroir horizontal */
 }
 
-.about__back-button:hover {
-    background: #792262;
-    color: white;
-    transform: translateX(-5px);
+.about__content,
+.about__header,
+.about__footer {
+    position: relative;
+    z-index: 5; /* ensure content sits above the decorative art */
 }
 
-.about__back-button:focus-visible {
-    outline: 2px solid #792262;
-    outline-offset: 4px;
-}
+/* Back button removed from markup; styles deleted */
 
 /* Header Section */
 .about__header {
     padding: 4rem 0 2rem;
-    text-align: center;
+    text-align: center; /* keep title centered */
 }
 
 .about__title {
     font-family: 'Montserrat', sans-serif;
-    font-size: 4rem;
+    font-size: 5rem;
     font-weight: 700;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.25em;
     text-transform: uppercase;
     color: #000;
-    margin: 0 0 3rem 0;
+    margin: 0 0 2.5rem 0;
 }
 
 /* Tabs Navigation */
 .about__tabs {
     display: flex;
     justify-content: center;
-    gap: 4rem;
-    margin-bottom: 4rem;
+    gap: 6rem;
+    margin-bottom: 3.5rem;
 }
 
 .about__tab-button {
     background: none;
     border: none;
     font-family: 'Montserrat', sans-serif;
-    font-size: 1.2rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #888;
     cursor: pointer;
@@ -115,84 +108,29 @@
 .about__content {
     display: flex;
     align-items: flex-start;
-    justify-content: center;
+    justify-content: flex-start; /* align children to start so content sits to the right */
     gap: 4rem;
-    padding: 0 5%;
-    max-width: 1400px;
+    padding: 0 6% 0 34%; /* add left padding so content shifts right of the left artwork */
+    max-width: 1200px; /* slightly narrower so it visually appears more to the right */
     margin: 0 auto;
     flex: 1;
 }
 
 /* Profile Section */
-.about__profile-section {
-    flex: 0 0 400px;
-    position: relative;
-}
-
-.about__profile-wrapper {
-    position: relative;
-    width: 100%;
-    height: 500px;
-}
-
-.about__profile-splash {
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 30% 50%, rgba(121, 34, 98, 0.9) 0%, transparent 70%);
-    filter: blur(40px);
-    transform: scale(1.2);
-}
-
-.about__profile-splash::before {
-    content: '';
-    position: absolute;
-    top: 20%;
-    left: 10%;
-    width: 80%;
-    height: 60%;
-    background: radial-gradient(ellipse, rgba(121, 34, 98, 0.6) 0%, transparent 70%);
-    transform: rotate(-15deg);
-    filter: blur(30px);
-}
-
-.about__profile-image {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 300px;
-    height: 400px;
-    background: linear-gradient(135deg, #792262 0%, #5a1a49 100%);
-    border-radius: 10px;
-    box-shadow: 
-        0 20px 40px rgba(121, 34, 98, 0.3),
-        0 10px 20px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.about__profile-initials {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 5rem;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.2);
-    letter-spacing: 0.1em;
-    user-select: none;
-}
+/* Profile section removed — layout simplified so text sits right of artwork */
 
 /* Biography Section */
 .about__bio-section {
     flex: 1;
-    max-width: 600px;
+    max-width: 680px;
+    margin-left: 2rem;
 }
 
 .about__bio-text {
     font-family: 'Montserrat', sans-serif;
     font-size: 1rem;
-    line-height: 1.8;
-    color: #333;
+    line-height: 1.9;
+    color: #5b2b3f;
     text-align: justify;
 }
 
@@ -266,9 +204,9 @@
 /* Responsive Design */
 @media (max-width: 1024px) {
     .about__content {
-        flex-direction: column;
-        align-items: center;
-        padding: 0 2rem;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 2rem;
     }
     
     .about__profile-section {
@@ -298,16 +236,16 @@
     }
     
     .about__profile-wrapper {
-        height: 400px;
+    height: 480px;
     }
     
     .about__profile-image {
-        width: 250px;
-        height: 330px;
+    width: 260px;
+    height: 360px;
     }
     
     .about__profile-initials {
-        font-size: 4rem;
+    font-size: 3.6rem;
     }
     
     .about__bio-text {
@@ -315,12 +253,7 @@
         padding: 0 1rem;
     }
     
-    .about__back-button {
-        top: 1rem;
-        left: 1rem;
-        padding: 0.6rem 1.2rem;
-        font-size: 0.85rem;
-    }
+    /* back button removed */
 }
 
 @media (max-width: 500px) {

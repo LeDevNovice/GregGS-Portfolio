@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 
 import { AboutProps } from '../types';
+import HomePageBackgroundImage from '../components/HomePage/homepageBackground.png';
 
 import '../styles/About.css';
 
@@ -30,7 +31,7 @@ const About: React.FC<AboutProps> = (): React.JSX.Element => {
       setIsContentVisible(true);
     }, 300);
 
-    return () => clearTimeout(timer);
+  return () => { clearTimeout(timer); };
   }, []);
 
   const handleGoBack = useCallback((): void => {
@@ -44,8 +45,8 @@ const About: React.FC<AboutProps> = (): React.JSX.Element => {
       }
     };
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => { window.removeEventListener('keydown', handleKeyPress); };
+  window.addEventListener('keydown', handleKeyPress);
+  return () => { window.removeEventListener('keydown', handleKeyPress); };
   }, [handleGoBack]);
 
   const handleTabChange = useCallback((tab: TabType): void => {
@@ -64,69 +65,42 @@ const About: React.FC<AboutProps> = (): React.JSX.Element => {
     }
   };
 
-  const profileVariants: Variants = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: { 
-      opacity: 1, 
-      scale: 1,
-      transition: {
-        duration: 0.8,
-        ease: [0.5, 1, 0.89, 1],
-        delay: 0.2
-      }
-    }
-  };
+  // profileVariants removed — profile section eliminated
 
   const renderBiographyContent = (): React.ReactNode => (
-    <>
-      <motion.div 
-        className="about__profile-section"
-        variants={profileVariants}
-        initial="hidden"
-        animate={isContentVisible ? "visible" : "hidden"}
-      >
-        <div className="about__profile-wrapper">
-          <div className="about__profile-splash" />
-          <div className="about__profile-image">
-            <span className="about__profile-initials">GS</span>
-          </div>
-        </div>
-      </motion.div>
+    <motion.div 
+      className="about__bio-section"
+      variants={contentVariants}
+      initial="hidden"
+      animate={isContentVisible ? 'visible' : 'hidden'}
+    >
+      <div className="about__bio-text">
+        <p>
+          Développeur passionné par les architectures web et les bonnes
+          pratiques de génie logiciel, je conçois des applications
+          fiables et maintenables. Après des études en informatique,
+          j'ai participé à de nombreux projets full‑stack où j'ai pris
+          la responsabilité de la conception d'API, de l'optimisation
+          des performances et de la mise en place de pipelines CI/CD.
+        </p>
 
-      <motion.div 
-        className="about__bio-section"
-        variants={contentVariants}
-        initial="hidden"
-        animate={isContentVisible ? "visible" : "hidden"}
-      >
-        <div className="about__bio-text">
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing 
-            elit. Vestibulum facilisis risus eget nisl luctus ultrices. 
-            Ut viverra fermentum justo, eget ultrices est 
-            ullamcorper at. Ut aliquam lectus sed est auctor, vitae 
-            fermentum mi aliquet. Curabitur urna sem, aliquet ac 
-            tellus non, vehicula auctor mi. Proin aliquam, tortor ni 
-            amet tristique congue, lorem diam varius augue, vel 
-            imperdiet eros ipsum sed dolor. Duis vitae rutrum 
-            urna. Aenean facilisis convallis metus, a euismod dolor 
-            suscipit at. Mauris vitae consequat est, ut ornare 
-            nunc. Proin euismod scelerisque posuere. Mauris 
-            consectetuer semper varius. Orci varius natoque 
-            penatibus et magnis dis parturient montes, nascetur 
-            ridiculus mus. Donec diam orci, vehicula eu lacinia 
-            mattis, placerat id quam. Aliquam et placerat massa. 
-            Morbi eget blandit nibh. Donec vitae malesuada enim, 
-            eu posuere lectus.
-          </p>
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing 
-            elit. Vestibulum facilisis risus eget nisl luctus ultrices. 
-            Ut viverra fermentum justo, eget ultrices est.
-          </p>
-        </div>
-      </motion.div>
-    </>
+        <p>
+          Mon approche privilégie la simplicité technique, la maintenabilité
+          et la collaboration interdisciplinaire. Je travaille étroitement
+          avec les designers pour traduire des maquettes (Figma) en
+          interfaces accessibles et performantes. Mes centres d'intérêt
+          incluent l'observabilité, la sécurité applicative et
+          l'optimisation des coûts d'infrastructure.
+        </p>
+
+        <p>
+          Compétences clés : conception d'API REST/GraphQL, Node.js,
+          TypeScript, React, tests (unitaires et E2E), Docker,
+          Kubernetes, intégration continue, monitoring et bonnes
+          pratiques DevOps.
+        </p>
+      </div>
+    </motion.div>
   );
 
   const renderSuccessContent = (): React.ReactNode => (
@@ -136,8 +110,36 @@ const About: React.FC<AboutProps> = (): React.JSX.Element => {
       initial="hidden"
       animate="visible"
     >
-      <h2>Mes Succès</h2>
-      <p>Contenu à venir...</p>
+      <h2>Succès & réalisations</h2>
+
+      <ul>
+        <li>
+          <strong>Architecture d'une plateforme d'API</strong> — Conception
+          et déploiement d'une API scalable pour un service à forte
+          charge (montée en charge horizontale, tests de charge,
+          surveillance), réduction de 40% des temps de réponse.
+        </li>
+        <li>
+          <strong>Pipeline CI/CD</strong> — Mise en place d'une chaîne
+          d'intégration et de déploiement automatisée (tests, lint,
+          build, déploiement) avec rollback automatique sur incidents.
+        </li>
+        <li>
+          <strong>Migration cloud</strong> — Migration maîtrisée vers une
+          infrastructure conteneurisée (Docker/Kubernetes), optimisation
+          des coûts et amélioration de la disponibilité.
+        </li>
+        <li>
+          <strong>Projets Open Source</strong> — Contributions régulières
+          à des bibliothèques utilities et outils de développement.
+        </li>
+      </ul>
+
+      <p style={{ marginTop: '1rem' }}>
+        Si vous souhaitez des exemples concrets (liens vers projets,
+        démonstrations ou études de cas), je peux fournir un portfolio
+        détaillé ou exporter les sections correspondantes depuis Figma.
+      </p>
     </motion.div>
   );
 
@@ -148,8 +150,35 @@ const About: React.FC<AboutProps> = (): React.JSX.Element => {
       initial="hidden"
       animate="visible"
     >
-      <h2>Mes Compétences</h2>
-      <p>Contenu à venir...</p>
+      <h2>Compétences techniques</h2>
+
+      <h3>Langages & frameworks</h3>
+      <ul>
+        <li>TypeScript / JavaScript (React, Node.js)</li>
+        <li>HTML5 / CSS3 (Sass, responsive, accessibilité)</li>
+        <li>GraphQL / REST</li>
+      </ul>
+
+      <h3>Infrastructure & DevOps</h3>
+      <ul>
+        <li>Docker, Kubernetes</li>
+        <li>CI/CD (GitHub Actions, GitLab CI, pipelines personnalisés)</li>
+        <li>Surveillance & observabilité (Prometheus, Grafana, Sentry)</li>
+      </ul>
+
+      <h3>Tests & qualité</h3>
+      <ul>
+        <li>Tests unitaires (Jest), tests d'intégration et E2E (Playwright)</li>
+        <li>Linting, formatage et revue de code</li>
+        <li>Architecture modulaire et principes SOLID</li>
+      </ul>
+
+      <p style={{ marginTop: '1rem' }}>
+        Je privilégie les choix techniques pragmatiques, la maintenabilité
+        et la performance. Chaque projet commence par une phase de
+        conception et de validation (maquettes, story mapping, tests
+        d'acceptation) avant l'implémentation.
+      </p>
     </motion.div>
   );
 
@@ -176,14 +205,14 @@ const About: React.FC<AboutProps> = (): React.JSX.Element => {
       role="main"
       aria-label="Page À propos"
     >
-      <button
-        onClick={handleGoBack}
-        className="about__back-button"
-        type="button"
-        aria-label="Retour à l'accueil"
-      >
-        ← Retour
-      </button>
+      {/* Left decorative background image (visual only) */}
+      <img
+        src={HomePageBackgroundImage}
+        alt=""
+        aria-hidden="true"
+        className="about__left-art"
+      />
+  {/* Back button removed as requested */}
 
       <motion.header 
         className="about__header"
@@ -198,7 +227,7 @@ const About: React.FC<AboutProps> = (): React.JSX.Element => {
             <button
               key={tab.id}
               className={`about__tab-button ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => handleTabChange(tab.id)}
+              onClick={() => { handleTabChange(tab.id); }}
               role="tab"
               aria-selected={activeTab === tab.id}
               aria-controls={`tabpanel-${tab.id}`}
