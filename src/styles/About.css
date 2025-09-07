@@ -1,36 +1,381 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+
+/* Main Container */
 .about {
     width: 100%;
-    height: 100vh;
+    min-height: 100vh;
     position: relative;
     overflow: hidden;
+    background: #FEFEFE;
+    display: flex;
+    flex-direction: column;
 }
-.about__content {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-}
+
+/* Back Button */
 .about__back-button {
-    margin-top: 2rem;
+    position: fixed;
+    top: 2rem;
+    left: 2rem;
+    background: none;
+    border: 2px solid #792262;
+    color: #792262;
     padding: 0.75rem 1.5rem;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 100;
+    border-radius: 0;
+}
+
+.about__back-button:hover {
     background: #792262;
     color: white;
-    border: none;
-    border-radius: 4px;
-    font-family: 'Montserrat', sans-serif;
-    cursor: pointer;
-    transition: background 0.2s ease;
+    transform: translateX(-5px);
 }
-.about__back-button:hover {
-    background: #5a1a49;
-}
+
 .about__back-button:focus-visible {
     outline: 2px solid #792262;
-    outline-offset: 2px;
+    outline-offset: 4px;
 }
-.about__loading {
+
+/* Header Section */
+.about__header {
+    padding: 4rem 0 2rem;
+    text-align: center;
+}
+
+.about__title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 4rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #000;
+    margin: 0 0 3rem 0;
+}
+
+/* Tabs Navigation */
+.about__tabs {
+    display: flex;
+    justify-content: center;
+    gap: 4rem;
+    margin-bottom: 4rem;
+}
+
+.about__tab-button {
+    background: none;
+    border: none;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #888;
+    cursor: pointer;
+    padding: 0.5rem 0;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.about__tab-button.active {
+    color: #792262;
+}
+
+.about__tab-button::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: #792262;
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.about__tab-button.active::after {
+    transform: scaleX(1);
+}
+
+.about__tab-button:hover:not(.active) {
+    color: #5a1a49;
+}
+
+.about__tab-button:focus-visible {
+    outline: 2px solid #792262;
+    outline-offset: 4px;
+    border-radius: 2px;
+}
+
+/* Content Area */
+.about__content {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4rem;
+    padding: 0 5%;
+    max-width: 1400px;
+    margin: 0 auto;
+    flex: 1;
+}
+
+/* Profile Section */
+.about__profile-section {
+    flex: 0 0 400px;
+    position: relative;
+}
+
+.about__profile-wrapper {
+    position: relative;
+    width: 100%;
+    height: 500px;
+}
+
+.about__profile-splash {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 50%, rgba(121, 34, 98, 0.9) 0%, transparent 70%);
+    filter: blur(40px);
+    transform: scale(1.2);
+}
+
+.about__profile-splash::before {
+    content: '';
+    position: absolute;
+    top: 20%;
+    left: 10%;
+    width: 80%;
+    height: 60%;
+    background: radial-gradient(ellipse, rgba(121, 34, 98, 0.6) 0%, transparent 70%);
+    transform: rotate(-15deg);
+    filter: blur(30px);
+}
+
+.about__profile-image {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    width: 300px;
+    height: 400px;
+    background: linear-gradient(135deg, #792262 0%, #5a1a49 100%);
+    border-radius: 10px;
+    box-shadow: 
+        0 20px 40px rgba(121, 34, 98, 0.3),
+        0 10px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.about__profile-initials {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 5rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.2);
+    letter-spacing: 0.1em;
+    user-select: none;
+}
+
+/* Biography Section */
+.about__bio-section {
+    flex: 1;
+    max-width: 600px;
+}
+
+.about__bio-text {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1rem;
+    line-height: 1.8;
+    color: #333;
+    text-align: justify;
+}
+
+.about__bio-text p {
+    margin-bottom: 1.5rem;
+}
+
+.about__bio-text p:first-child::first-letter {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #792262;
+    float: left;
+    line-height: 1;
+    margin-right: 0.5rem;
+    margin-top: 0.2rem;
+}
+
+.about__bio-text p:last-child {
+    margin-bottom: 0;
+}
+
+/* Tab Placeholder Content */
+.about__tab-placeholder {
+    text-align: center;
+    padding: 4rem;
+}
+
+.about__tab-placeholder h2 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2rem;
+    font-weight: 600;
+    color: #792262;
+    margin-bottom: 1rem;
+    letter-spacing: 0.05em;
+}
+
+.about__tab-placeholder p {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+/* Footer */
+.about__footer {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    padding: 1rem;
+}
+
+.about__footer-text {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.9rem;
+    color: #666;
+    font-style: italic;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .about__content {
+        flex-direction: column;
+        align-items: center;
+        padding: 0 2rem;
+    }
+    
+    .about__profile-section {
+        flex: none;
+        width: 100%;
+        max-width: 400px;
+    }
+    
+    .about__bio-section {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .about__title {
+        font-size: 2.5rem;
+        letter-spacing: 0.1em;
+    }
+    
+    .about__tabs {
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+    
+    .about__tab-button {
+        font-size: 1rem;
+    }
+    
+    .about__profile-wrapper {
+        height: 400px;
+    }
+    
+    .about__profile-image {
+        width: 250px;
+        height: 330px;
+    }
+    
+    .about__profile-initials {
+        font-size: 4rem;
+    }
+    
+    .about__bio-text {
+        font-size: 0.95rem;
+        padding: 0 1rem;
+    }
+    
+    .about__back-button {
+        top: 1rem;
+        left: 1rem;
+        padding: 0.6rem 1.2rem;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 500px) {
+    .about__title {
+        font-size: 2rem;
+        letter-spacing: 0.08em;
+        margin-bottom: 2rem;
+    }
+    
+    .about__header {
+        padding: 3rem 0 1.5rem;
+    }
+    
+    .about__tabs {
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .about__tab-button {
+        font-size: 0.9rem;
+    }
+    
+    .about__content {
+        padding: 0 1rem;
+    }
+    
+    .about__profile-wrapper {
+        height: 350px;
+    }
+    
+    .about__profile-image {
+        width: 200px;
+        height: 280px;
+    }
+    
+    .about__profile-initials {
+        font-size: 3rem;
+    }
+    
+    .about__bio-text {
+        font-size: 0.9rem;
+        line-height: 1.7;
+        text-align: left;
+    }
+    
+    .about__bio-text p:first-child::first-letter {
+        font-size: 2.5rem;
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }
