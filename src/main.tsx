@@ -1,9 +1,21 @@
 import { StrictMode } from 'react';
 import { createRoot, Root } from 'react-dom/client';
+import { createRouter, RouterProvider } from '@tanstack/react-router';
 
-import AppRoutes from './routes/routes';
+import { routeTree } from './routeTree.gen';
 
 import './index.css';
+
+const router = createRouter({ 
+  routeTree,
+  defaultPreload: 'intent'
+});
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router;
+  }
+}
 
 const initializeApp = (): void => {
   const rootElement = document.getElementById('root');
@@ -40,7 +52,7 @@ const initializeApp = (): void => {
 
   root.render(
     <StrictMode>
-      <AppRoutes />
+      <RouterProvider router={router} />
     </StrictMode>
   );
 };

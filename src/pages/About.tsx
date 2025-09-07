@@ -1,6 +1,6 @@
 import { motion, Variants } from 'framer-motion';
 import { useRef, useState, useCallback, useEffect } from 'react';
-import { useNavigate, NavigateFunction } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 
 import HomePageBackgroundImage from '../components/HomePage/homepageBackground.png';
 import { AboutProps } from '../types';
@@ -59,7 +59,7 @@ const useImageAnimation = (): UseImageAnimationReturn => {
 };
 
 const About: React.FC<AboutProps> = (): React.JSX.Element => {
-  const navigate: NavigateFunction = useNavigate();
+  const navigate = useNavigate();
   const {
     imgRef,
     imageWidth,
@@ -87,7 +87,7 @@ const About: React.FC<AboutProps> = (): React.JSX.Element => {
   };
 
   const handleGoBack = useCallback((): void => {
-    void navigate('/');
+    void navigate({ to: '/' });
   }, [navigate]);
 
   useEffect((): (() => void) => {

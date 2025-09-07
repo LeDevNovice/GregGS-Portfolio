@@ -1,12 +1,11 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useNavigate, NavigateFunction } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 
 import HomePageBackground from "./HomePageBackground";
 import HomePageFooter from "./HomePageFooter";
 import HomePageMenu from "./HomePageMenu";
 import HomePageSocials from "./HomePageSocials";
 import HomePageTitle from "./HomePageTitle";
-
 
 interface AnimationState {
   startFadeOut: boolean;
@@ -127,11 +126,11 @@ const useReducedMotion = (): boolean => {
 };
 
 const HomePage: React.FC = (): React.JSX.Element => {
-  const navigate: NavigateFunction = useNavigate();
+  const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
 
   const handleNavigateToAbout = useCallback((): void => {
-    void navigate('/about');
+    void navigate({ to: '/about' });
   }, [navigate]);
 
   const { animationState, currentPhase, startSequence } = useAnimationSequence(
@@ -154,7 +153,7 @@ const HomePage: React.FC = (): React.JSX.Element => {
       }
       if (event.altKey && event.key === 'p') {
         event.preventDefault();
-        void navigate('/projects');
+        void navigate({ to: '/projects' });
       }
     };
 

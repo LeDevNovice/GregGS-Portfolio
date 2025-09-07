@@ -21,7 +21,15 @@ const useIntroState = (): IntroState => {
   const STORAGE_KEY = 'portfolio_intro_shown';
   
   const [introState, setIntroState] = useState<HomeState>(() => {
-    const hasShownIntro = sessionStorage.getItem(STORAGE_KEY) === 'true';
+    let hasShownIntro = false;
+    try {
+      hasShownIntro = sessionStorage.getItem(STORAGE_KEY) === 'true';
+    } catch (error) {
+      console.warn('SessionStorage not available:', error);
+      hasShownIntro = false;
+    }
+    
+    console.log('🔍 Initial intro state - hasShownIntro:', hasShownIntro);
     
     return {
       showIntro: !hasShownIntro,
@@ -32,7 +40,7 @@ const useIntroState = (): IntroState => {
   });
 
   const startIntroFinalization = useCallback(() => {
-    console.log('Starting intro finalization');
+    console.log('🎬 Starting intro finalization');
     setIntroState(prev => ({
       ...prev,
       isAnimationFinalizing: true,
@@ -40,8 +48,14 @@ const useIntroState = (): IntroState => {
   }, []);
 
   const completeIntro = useCallback(() => {
-    console.log('Completing intro - unmounting overlay');
-    sessionStorage.setItem(STORAGE_KEY, 'true');
+    console.log('✅ Completing intro - unmounting overlay');
+    try {
+      sessionStorage.setItem(STORAGE_KEY, 'true');
+      console.log('💾 SessionStorage set successfully');
+    } catch (error) {
+      console.warn('Could not set sessionStorage:', error);
+    }
+    
     setIntroState(prev => ({
       ...prev,
       showIntro: false,
@@ -51,7 +65,13 @@ const useIntroState = (): IntroState => {
   }, []);
 
   const resetIntro = useCallback(() => {
-    sessionStorage.removeItem(STORAGE_KEY);
+    console.log('🔄 Resetting intro state');
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.warn('Could not remove from sessionStorage:', error);
+    }
+    
     setIntroState({
       showIntro: true,
       isFirstVisit: false,
@@ -59,6 +79,10 @@ const useIntroState = (): IntroState => {
       isAnimationFinalizing: false,
     });
   }, []);
+
+  useEffect(() => {
+    console.log('📊 Intro state changed:', introState);
+  }, [introState]);
 
   return {
     ...introState,
@@ -78,18 +102,24 @@ const Home: React.FC<HomeProps> = () => {
   } = useIntroState();
 
   const handleIntroFinish = useCallback(() => {
+    console.log('🎯 Intro finish triggered');
     startIntroFinalization();
+    
     setTimeout(() => {
-      console.log('Démontage du composant IntroOverlay');
+      console.log('⏰ Timeout reached - completing intro');
       completeIntro();
     }, 2000);
   }, [startIntroFinalization, completeIntro]);
 
   useEffect(() => {
     if (!showIntro && isFirstVisit && !isAnimationFinalizing) {
-      console.log('Intro complétée pour la première fois');
+      console.log('🎉 Intro completed for the first time');
     }
   }, [showIntro, isFirstVisit, isAnimationFinalizing]);
+
+  useEffect(() => {
+    console.log('🏠 Home component render - showIntro:', showIntro, 'isFirstVisit:', isFirstVisit);
+  });
 
   return (
     <>
