@@ -1,5 +1,5 @@
 import { motion, Variants } from 'framer-motion';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 
 import { AboutProps } from '../types';
@@ -24,14 +24,14 @@ const About: React.FC<AboutProps> = (): React.JSX.Element => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('biographie');
   const [isContentVisible, setIsContentVisible] = useState(false);
+  const bioSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Delay content visibility for smooth animation
     const timer = setTimeout(() => {
       setIsContentVisible(true);
     }, 300);
 
-  return () => { clearTimeout(timer); };
+    return () => { clearTimeout(timer); };
   }, []);
 
   const handleGoBack = useCallback((): void => {
@@ -65,39 +65,50 @@ const About: React.FC<AboutProps> = (): React.JSX.Element => {
     }
   };
 
-  // profileVariants removed — profile section eliminated
-
   const renderBiographyContent = (): React.ReactNode => (
     <motion.div 
-      className="about__bio-section"
+      ref={bioSectionRef}
+      className="about__bio-section has-more"
       variants={contentVariants}
       initial="hidden"
       animate={isContentVisible ? 'visible' : 'hidden'}
     >
       <div className="about__bio-text">
         <p>
-          Développeur passionné par les architectures web et les bonnes
-          pratiques de génie logiciel, je conçois des applications
-          fiables et maintenables. Après des études en informatique,
-          j'ai participé à de nombreux projets full‑stack où j'ai pris
-          la responsabilité de la conception d'API, de l'optimisation
-          des performances et de la mise en place de pipelines CI/CD.
+          Licencié pour raisons économiques pendant la période Covid, j’ai choisi 
+          de transformer un contretemps en cap à prendre. Plutôt que de subir 
+          l’inactivité, erreur que j’avais déjà payée sur un précédent parcours, 
+          je me suis plongé en autodidacte dans le développement web. Ce qui commençait 
+          comme quelques heures par jour est vite devenu une obsession de curiosité : 
+          pratiquer, décortiquer, recommencer. J’ai ensuite rejoint la formation O’Clock, 
+          que j’ai financée moi-même jusqu’au socle de trois mois sans diplôme au bout, donc, 
+          mais une pratique intensive et ciblée qui m’a permis de combler largement le 
+          déficit théorique par l’expérience.
         </p>
 
         <p>
-          Mon approche privilégie la simplicité technique, la maintenabilité
-          et la collaboration interdisciplinaire. Je travaille étroitement
-          avec les designers pour traduire des maquettes (Figma) en
-          interfaces accessibles et performantes. Mes centres d'intérêt
-          incluent l'observabilité, la sécurité applicative et
-          l'optimisation des coûts d'infrastructure.
+          Confronté à la nécessité très concrète de subvenir aux besoins de ma femme 
+          (souffrant d’anxiété chronique) et de notre nouveau-né, j’ai redoublé d’efforts : 
+          nuits à coder, échanges quotidiens sur Twitter via LeDevNovice, et recherche active 
+          d’opportunités dans les Hauts-de-France pour me rapprocher de la famille. Une annonce 
+          sincère de ma recherche a suscité une vague inattendue, plus d’un million d’impressions 
+          et des dizaines de demandes de CV, et c’est finalement lors d’un entretien technique 
+          avec Apizr, à Lille, qu’on m’a donné ma chance.
         </p>
 
         <p>
-          Compétences clés : conception d'API REST/GraphQL, Node.js,
-          TypeScript, React, tests (unitaires et E2E), Docker,
-          Kubernetes, intégration continue, monitoring et bonnes
-          pratiques DevOps.
+          Depuis juin 2022, j’exerce un métier qui me passionne : conception et développement d’API, 
+          orchestration de flux, dialogue avec des clients pour transformer des besoins en solutions 
+          techniques. Je contribue modestement à l’open-source (TanStack Query, Proton), j’écris des 
+          articles pour vulgariser des concepts et valider mes acquis, et je crois fermement que 
+          partager accélère l’apprentissage. Toujours curieux, je préfère l’humilité du terrain à la 
+          vaine prétention : j’apprends de chaque bug, de chaque revue de code, et j’aime transmettre 
+          ce que j’apprends, parce que la meilleure façon de maîtriser quelque chose, c’est souvent de 
+          l’expliquer.
+        </p>
+
+        <p>
+          — Grégory Saison, aka LeDevNovice
         </p>
       </div>
     </motion.div>
@@ -110,36 +121,7 @@ const About: React.FC<AboutProps> = (): React.JSX.Element => {
       initial="hidden"
       animate="visible"
     >
-      <h2>Succès & réalisations</h2>
-
-      <ul>
-        <li>
-          <strong>Architecture d'une plateforme d'API</strong> — Conception
-          et déploiement d'une API scalable pour un service à forte
-          charge (montée en charge horizontale, tests de charge,
-          surveillance), réduction de 40% des temps de réponse.
-        </li>
-        <li>
-          <strong>Pipeline CI/CD</strong> — Mise en place d'une chaîne
-          d'intégration et de déploiement automatisée (tests, lint,
-          build, déploiement) avec rollback automatique sur incidents.
-        </li>
-        <li>
-          <strong>Migration cloud</strong> — Migration maîtrisée vers une
-          infrastructure conteneurisée (Docker/Kubernetes), optimisation
-          des coûts et amélioration de la disponibilité.
-        </li>
-        <li>
-          <strong>Projets Open Source</strong> — Contributions régulières
-          à des bibliothèques utilities et outils de développement.
-        </li>
-      </ul>
-
-      <p style={{ marginTop: '1rem' }}>
-        Si vous souhaitez des exemples concrets (liens vers projets,
-        démonstrations ou études de cas), je peux fournir un portfolio
-        détaillé ou exporter les sections correspondantes depuis Figma.
-      </p>
+      <h2>A venir...</h2>
     </motion.div>
   );
 
@@ -150,35 +132,7 @@ const About: React.FC<AboutProps> = (): React.JSX.Element => {
       initial="hidden"
       animate="visible"
     >
-      <h2>Compétences techniques</h2>
-
-      <h3>Langages & frameworks</h3>
-      <ul>
-        <li>TypeScript / JavaScript (React, Node.js)</li>
-        <li>HTML5 / CSS3 (Sass, responsive, accessibilité)</li>
-        <li>GraphQL / REST</li>
-      </ul>
-
-      <h3>Infrastructure & DevOps</h3>
-      <ul>
-        <li>Docker, Kubernetes</li>
-        <li>CI/CD (GitHub Actions, GitLab CI, pipelines personnalisés)</li>
-        <li>Surveillance & observabilité (Prometheus, Grafana, Sentry)</li>
-      </ul>
-
-      <h3>Tests & qualité</h3>
-      <ul>
-        <li>Tests unitaires (Jest), tests d'intégration et E2E (Playwright)</li>
-        <li>Linting, formatage et revue de code</li>
-        <li>Architecture modulaire et principes SOLID</li>
-      </ul>
-
-      <p style={{ marginTop: '1rem' }}>
-        Je privilégie les choix techniques pragmatiques, la maintenabilité
-        et la performance. Chaque projet commence par une phase de
-        conception et de validation (maquettes, story mapping, tests
-        d'acceptation) avant l'implémentation.
-      </p>
+      <h2>A venir...</h2>
     </motion.div>
   );
 
@@ -205,15 +159,12 @@ const About: React.FC<AboutProps> = (): React.JSX.Element => {
       role="main"
       aria-label="Page À propos"
     >
-      {/* Left decorative background image (visual only) */}
       <img
         src={HomePageBackgroundImage}
         alt=""
         aria-hidden="true"
         className="about__left-art"
       />
-  {/* Back button removed as requested */}
-
       <motion.header 
         className="about__header"
         initial={{ opacity: 0, y: -20 }}
@@ -221,7 +172,6 @@ const About: React.FC<AboutProps> = (): React.JSX.Element => {
         transition={{ duration: 0.6, delay: 0.1 }}
       >
         <h1 className="about__title">À PROPOS</h1>
-
         <nav className="about__tabs" role="tablist">
           {tabs.map((tab) => (
             <button
@@ -238,7 +188,6 @@ const About: React.FC<AboutProps> = (): React.JSX.Element => {
           ))}
         </nav>
       </motion.header>
-
       <main 
         className="about__content"
         role="tabpanel"
@@ -247,7 +196,6 @@ const About: React.FC<AboutProps> = (): React.JSX.Element => {
       >
         {renderTabContent()}
       </main>
-
       <footer className="about__footer">
         <span className="about__footer-text">
           Le Dev Novice © {new Date().getFullYear()}
