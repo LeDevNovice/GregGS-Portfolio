@@ -1,90 +1,38 @@
 import { motion, Variants } from 'framer-motion';
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 
-import HomePageBackgroundImage from '../components/HomePage/homepageBackground.png';
 import { AboutProps } from '../types';
+import HomePageBackgroundImage from '../components/HomePage/homepageBackground.png';
 
-import '../styles/HomePage.css';
+import '../styles/About.css';
 
-interface AboutAnimationState {
-  imageWidth: number;
-  isImageLoaded: boolean;
-  hasEnteredPage: boolean;
+type TabType = 'biographie' | 'succes' | 'competences';
+
+interface TabContent {
+  id: TabType;
+  label: string;
 }
 
-interface UseImageAnimationReturn {
-  imgRef: React.RefObject<HTMLImageElement>;
-  imageWidth: number;
-  isImageLoaded: boolean;
-  hasEnteredPage: boolean;
-  handleImageLoad: () => void;
-  markPageEntered: () => void;
-}
-
-const useImageAnimation = (): UseImageAnimationReturn => {
-  const imgRef = useRef<HTMLImageElement>(null);
-  const [animationState, setAnimationState] = useState<AboutAnimationState>({
-    imageWidth: 0,
-    isImageLoaded: false,
-    hasEnteredPage: false,
-  });
-
-  const handleImageLoad = useCallback((): void => {
-    if (imgRef.current) {
-      const width = imgRef.current.offsetWidth;
-      setAnimationState(prev => ({
-        ...prev,
-        imageWidth: width,
-        isImageLoaded: true,
-      }));
-    }
-  }, []);
-
-  const markPageEntered = useCallback((): void => {
-    setAnimationState(prev => ({
-      ...prev,
-      hasEnteredPage: true,
-    }));
-  }, []);
-
-  return {
-    imgRef,
-    imageWidth: animationState.imageWidth,
-    isImageLoaded: animationState.isImageLoaded,
-    hasEnteredPage: animationState.hasEnteredPage,
-    handleImageLoad,
-    markPageEntered,
-  };
-};
+const tabs: TabContent[] = [
+  { id: 'biographie', label: 'Biographie' },
+  { id: 'succes', label: 'Succès' },
+  { id: 'competences', label: 'Compétences' },
+];
 
 const About: React.FC<AboutProps> = (): React.JSX.Element => {
   const navigate = useNavigate();
-  const {
-    imgRef,
-    imageWidth,
-    isImageLoaded,
-    hasEnteredPage,
-    handleImageLoad,
-    markPageEntered,
-  } = useImageAnimation();
+  const [activeTab, setActiveTab] = useState<TabType>('biographie');
+  const [isContentVisible, setIsContentVisible] = useState(false);
+  const bioSectionRef = useRef<HTMLDivElement>(null);
 
-  const imageVariants: Variants = {
-    initial: {
-      x: '-50vw',
-      opacity: 0,
-      scaleX: -1,
-    },
-    animate: {
-      x: `calc(-100vw + ${String(imageWidth)}px)`,
-      opacity: 1,
-      transition: {
-        duration: 3,
-        ease: [0.5, 1, 0.89, 1],
-        onComplete: markPageEntered,
-      },
-    },
-  };
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsContentVisible(true);
+    }, 300);
+
+    return () => { clearTimeout(timer); };
+  }, []);
 
   const handleGoBack = useCallback((): void => {
     void navigate({ to: '/' });
@@ -97,40 +45,109 @@ const About: React.FC<AboutProps> = (): React.JSX.Element => {
       }
     };
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => { window.removeEventListener('keydown', handleKeyPress); };
+  window.addEventListener('keydown', handleKeyPress);
+  return () => { window.removeEventListener('keydown', handleKeyPress); };
   }, [handleGoBack]);
 
-  const renderContent = useCallback((): React.ReactNode => {
-    if (!hasEnteredPage) return null;
+  const handleTabChange = useCallback((tab: TabType): void => {
+    setActiveTab(tab);
+  }, []);
 
-    return (
-      <motion.div
-        className="about__content"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.3 }}
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          textAlign: 'center',
-          zIndex: 10,
-        }}
-      >
-        <h1>À Propos</h1>
-        <p>Contenu de la page à ajouter...</p>
-        <button
-          onClick={handleGoBack}
-          className="about__back-button"
-          type="button"
-        >
-          Retour à l'accueil
-        </button>
-      </motion.div>
-    );
-  }, [hasEnteredPage, handleGoBack]);
+  const contentVariants: Variants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: 'easeOut'
+      }
+    }
+  };
+
+  const renderBiographyContent = (): React.ReactNode => (
+    <motion.div 
+      ref={bioSectionRef}
+      className="about__bio-section has-more"
+      variants={contentVariants}
+      initial="hidden"
+      animate={isContentVisible ? 'visible' : 'hidden'}
+    >
+      <div className="about__bio-text">
+        <p>
+          Licencié pour raisons économiques pendant la période Covid, j’ai choisi 
+          de transformer un contretemps en cap à prendre. Plutôt que de subir 
+          l’inactivité, erreur que j’avais déjà payée sur un précédent parcours, 
+          je me suis plongé en autodidacte dans le développement web. Ce qui commençait 
+          comme quelques heures par jour est vite devenu une obsession de curiosité : 
+          pratiquer, décortiquer, recommencer. J’ai ensuite rejoint la formation O’Clock, 
+          que j’ai financée moi-même jusqu’au socle de trois mois sans diplôme au bout, donc, 
+          mais une pratique intensive et ciblée qui m’a permis de combler largement le 
+          déficit théorique par l’expérience.
+        </p>
+
+        <p>
+          Confronté à la nécessité très concrète de subvenir aux besoins de ma femme 
+          (souffrant d’anxiété chronique) et de notre nouveau-né, j’ai redoublé d’efforts : 
+          nuits à coder, échanges quotidiens sur Twitter via LeDevNovice, et recherche active 
+          d’opportunités dans les Hauts-de-France pour me rapprocher de la famille. Une annonce 
+          sincère de ma recherche a suscité une vague inattendue, plus d’un million d’impressions 
+          et des dizaines de demandes de CV, et c’est finalement lors d’un entretien technique 
+          avec Apizr, à Lille, qu’on m’a donné ma chance.
+        </p>
+
+        <p>
+          Depuis juin 2022, j’exerce un métier qui me passionne : conception et développement d’API, 
+          orchestration de flux, dialogue avec des clients pour transformer des besoins en solutions 
+          techniques. Je contribue modestement à l’open-source (TanStack Query, Proton), j’écris des 
+          articles pour vulgariser des concepts et valider mes acquis, et je crois fermement que 
+          partager accélère l’apprentissage. Toujours curieux, je préfère l’humilité du terrain à la 
+          vaine prétention : j’apprends de chaque bug, de chaque revue de code, et j’aime transmettre 
+          ce que j’apprends, parce que la meilleure façon de maîtriser quelque chose, c’est souvent de 
+          l’expliquer.
+        </p>
+
+        <p>
+          — Grégory Saison, aka LeDevNovice
+        </p>
+      </div>
+    </motion.div>
+  );
+
+  const renderSuccessContent = (): React.ReactNode => (
+    <motion.div 
+      className="about__tab-placeholder"
+      variants={contentVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <h2>A venir...</h2>
+    </motion.div>
+  );
+
+  const renderCompetencesContent = (): React.ReactNode => (
+    <motion.div 
+      className="about__tab-placeholder"
+      variants={contentVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <h2>A venir...</h2>
+    </motion.div>
+  );
+
+  const renderTabContent = (): React.ReactNode => {
+    switch (activeTab) {
+      case 'biographie':
+        return renderBiographyContent();
+      case 'succes':
+        return renderSuccessContent();
+      case 'competences':
+        return renderCompetencesContent();
+      default:
+        return null;
+    }
+  };
 
   return (
     <motion.div
@@ -142,30 +159,48 @@ const About: React.FC<AboutProps> = (): React.JSX.Element => {
       role="main"
       aria-label="Page À propos"
     >
-      <motion.img
-        ref={imgRef}
+      <img
         src={HomePageBackgroundImage}
-        className="homepage__background"
-        variants={imageVariants}
-        initial="initial"
-        animate={isImageLoaded ? 'animate' : 'initial'}
-        style={{ transformOrigin: 'center' }}
-        onLoad={handleImageLoad}
         alt=""
-        role="presentation"
+        aria-hidden="true"
+        className="about__left-art"
       />
-
-      {renderContent()}
-
-      {!isImageLoaded && (
-        <div
-          className="about__loading"
-          role="status"
-          aria-live="polite"
-        >
-          <span className="sr-only">Chargement...</span>
-        </div>
-      )}
+      <motion.header 
+        className="about__header"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+      >
+        <h1 className="about__title">À PROPOS</h1>
+        <nav className="about__tabs" role="tablist">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              className={`about__tab-button ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => { handleTabChange(tab.id); }}
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              aria-controls={`tabpanel-${tab.id}`}
+              type="button"
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </motion.header>
+      <main 
+        className="about__content"
+        role="tabpanel"
+        id={`tabpanel-${activeTab}`}
+        aria-labelledby={`tab-${activeTab}`}
+      >
+        {renderTabContent()}
+      </main>
+      <footer className="about__footer">
+        <span className="about__footer-text">
+          Le Dev Novice © {new Date().getFullYear()}
+        </span>
+      </footer>
     </motion.div>
   );
 };
