@@ -1,7 +1,5 @@
 import { Variant, Variants } from 'framer-motion';
 
-// --- Dot Animation ---
-
 export type DotAnimationState =
     | 'fadeIn'
     | 'idle'
@@ -24,8 +22,6 @@ export interface DotVariants extends Variants {
     contract: Variant;
 }
 
-// --- IntroOverlay ---
-
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface IntroOverlayProps {}
 
@@ -46,18 +42,12 @@ export interface IntroEnterMessageProps {
     isTouchDevice: boolean;
 }
 
-// --- Overlay Menu ---
-
 export interface OverlayMenuProps {
     onClose: () => void;
     isVisible: boolean;
 }
 
-// --- Pages ---
-
 export type AboutProps = Record<string, never>;
-
-// --- Utilities ---
 
 export type NavigationHandler = () => void;
 export type AnimationCallback = () => void;

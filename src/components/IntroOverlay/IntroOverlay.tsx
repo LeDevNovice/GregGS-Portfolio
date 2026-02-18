@@ -10,11 +10,7 @@ import {
   DotAnimationState,
   DotVariants,
 } from '../../types';
-
 import '../../styles/Overlay.css';
-
-// ─── State ──────────────────────────────────────────────
-
 interface IntroOverlayState {
   dotAnimationState: DotAnimationState;
   titlesVisible: boolean;
@@ -26,8 +22,6 @@ interface IntroOverlayState {
   hasCompletedFirstOpen: boolean;
 }
 
-// ─── Actions ────────────────────────────────────────────
-
 type IntroOverlayAction =
   | { type: 'INIT_TOUCH_DEVICE'; isTouchDevice: boolean }
   | { type: 'SHOW_ENTER_MESSAGE' }
@@ -37,8 +31,6 @@ type IntroOverlayAction =
   | { type: 'SHOW_MENU' }
   | { type: 'START_CLOSE' }
   | { type: 'RESET_TO_IDLE' };
-
-// ─── Reducer ────────────────────────────────────────────
 
 const introOverlayReducer = (
   state: IntroOverlayState,
@@ -69,8 +61,6 @@ const introOverlayReducer = (
       return {
         ...state,
         dotAnimationState: 'expand',
-        // Titles stay in DOM (opacity → 0 via prop) so the dot
-        // expands from its real position between "Greg" and "GS"
         titlesVisible: false,
         showEnterMessage: false,
       };
@@ -97,7 +87,6 @@ const introOverlayReducer = (
         titlesVisible: true,
         showEnterMessage: true,
         hasOverlayBackground: true,
-        // Reset so wiggles can fire again on next click
         hasStartedWiggle: false,
       };
 
@@ -105,8 +94,6 @@ const introOverlayReducer = (
       return state;
   }
 };
-
-// ─── Dot Variants ───────────────────────────────────────
 
 const dotVariants: DotVariants = {
   hidden: {
@@ -181,8 +168,6 @@ const dotVariants: DotVariants = {
   },
 } as const;
 
-// ─── Component ──────────────────────────────────────────
-
 const IntroOverlay: React.FC<IntroOverlayProps> = () => {
   const initialState: IntroOverlayState = {
     dotAnimationState: 'fadeIn',
@@ -197,8 +182,6 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
 
   const [state, dispatch] = useReducer(introOverlayReducer, initialState);
 
-  // ── Init ──
-
   useEffect(() => {
     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     dispatch({ type: 'INIT_TOUCH_DEVICE', isTouchDevice: isTouch });
@@ -208,35 +191,26 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
     dispatch({ type: 'SHOW_ENTER_MESSAGE' });
   }, []);
 
-  // ── User click on the overlay (Greg.GS screen) ──
-
   const handleUserInteraction = useCallback(() => {
     if (state.menuOpen) return;
 
-    // Always run wiggle sequence (fires on every open)
     if (!state.hasStartedWiggle) {
       dispatch({ type: 'START_WIGGLE_SEQUENCE' });
     }
   }, [state.menuOpen, state.hasStartedWiggle]);
 
-  // ── Close menu (✕ button) ──
-
   const handleMenuClose = useCallback(() => {
     dispatch({ type: 'START_CLOSE' });
   }, []);
-
-  // ── Animation state machine ──
 
   const handleDotAnimationComplete = useCallback((
     previousState: DotAnimationState
   ) => {
     const transitions: Partial<Record<DotAnimationState, () => void>> = {
-      fadeIn: () => {
-        // Waiting for user interaction
-      },
-      idle: () => {
-        // Stable state, waiting for user interaction
-      },
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      fadeIn: () => { },
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      idle: () => { },
       wiggle1: () => {
         dispatch({ type: 'TRANSITION_TO', nextState: 'pause' });
       },
@@ -265,8 +239,6 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
     if (transition) transition();
   }, []);
 
-  // ── Render ──
-
   const containerStyle = {
     backgroundColor: state.hasOverlayBackground ? '#FEFEFE' : 'transparent',
     transition: 'background-color 0.5s ease-out',
@@ -294,9 +266,6 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
       }}
       aria-label="Cliquez pour ouvrir le menu"
     >
-      {/* ── Greg . GS ── 
-          Titles are ALWAYS in the DOM so the dot stays in position
-          during expand/contract. Visibility is controlled via opacity. */}
       <div className="overlay__title-wrapper">
         <IntroTitle
           text="Greg"
@@ -319,14 +288,12 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
         />
       </div>
 
-      {/* ── Enter message ── */}
       {state.showEnterMessage
         && (state.dotAnimationState === 'fadeIn' || state.dotAnimationState === 'idle')
         && (
           <IntroEnterMessage isTouchDevice={state.isTouchDevice} />
         )}
 
-      {/* ── Fullscreen menu (visible when expanded) ── */}
       <OverlayMenu
         isVisible={state.menuOpen}
         onClose={handleMenuClose}

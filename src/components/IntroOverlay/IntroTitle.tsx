@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 
 import { IntroTitleProps } from '../../types';
-
 import '../../styles/Overlay.css';
 
 const IntroTitle: React.FC<IntroTitleProps> = ({
@@ -11,15 +10,12 @@ const IntroTitle: React.FC<IntroTitleProps> = ({
   handleTitleAnimationComplete,
 }) => {
   const getTransition = () => {
-    // Fading out during expansion → quick fade
     if (!visible) {
       return { duration: 0.3, ease: 'easeOut' as const };
     }
-    // Reappearing after menu close → instant
     if (skipAnimation) {
       return { duration: 0 };
     }
-    // First load → slow cinematic fade-in
     return { duration: 5, delay: 1, ease: 'linear' as const };
   };
 

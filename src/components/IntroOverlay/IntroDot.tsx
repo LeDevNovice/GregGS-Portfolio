@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+
 import { IntroDotProps } from '../../types';
 import '../../styles/Overlay.css';
 

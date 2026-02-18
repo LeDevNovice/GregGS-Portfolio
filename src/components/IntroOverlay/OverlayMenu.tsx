@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from '@tanstack/react-router';
 
 import { OverlayMenuProps } from '../../types';
-
 import '../../styles/Overlay.css';
 
 interface MenuItem {
@@ -12,9 +11,9 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-  { label: 'À Propos', path: '/about' },
+  { label: 'About', path: '/about' },
   { label: 'Publications', path: '/publications' },
-  { label: 'Projets', path: '/projects' },
+  { label: 'Projects', path: '/projects' },
 ];
 
 const containerVariants = {
@@ -61,14 +60,12 @@ const OverlayMenu: React.FC<OverlayMenuProps> = ({ onClose, isVisible }) => {
   const navigate = useNavigate();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Focus trap: focus the close button when the menu opens
   useEffect(() => {
     if (isVisible && closeButtonRef.current) {
       closeButtonRef.current.focus();
     }
   }, [isVisible]);
 
-  // Close on Escape key
   useEffect(() => {
     if (!isVisible) return;
 
@@ -101,7 +98,6 @@ const OverlayMenu: React.FC<OverlayMenuProps> = ({ onClose, isVisible }) => {
           aria-modal="true"
           aria-label="Menu de navigation"
         >
-          {/* Close button */}
           <motion.button
             ref={closeButtonRef}
             className="overlay__menu-close"
@@ -116,7 +112,6 @@ const OverlayMenu: React.FC<OverlayMenuProps> = ({ onClose, isVisible }) => {
             ✕
           </motion.button>
 
-          {/* Navigation items */}
           <nav
             className="overlay__menu-nav"
             role="navigation"

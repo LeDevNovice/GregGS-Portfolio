@@ -1,7 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 
-/* ─── Overlay Container ─────────────────────────────────── */
-
 .overlay__container {
   position: fixed;
   inset: 0;
@@ -23,8 +21,6 @@
   outline: 2px solid #792262;
   outline-offset: -2px;
 }
-
-/* ─── Title (Greg . GS) ─────────────────────────────────── */
 
 .overlay__title-wrapper {
   display: inline-block;
@@ -48,8 +44,6 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─── Dot ────────────────────────────────────────────────── */
-
 .overlay__title-dot {
   display: inline-block;
   width: 2.5vw;
@@ -68,8 +62,6 @@
   z-index: 9999 !important;
   transform-style: preserve-3d;
 }
-
-/* ─── Enter Message ──────────────────────────────────────── */
 
 .overlay__enter-message {
   position: absolute;
@@ -91,8 +83,6 @@
     opacity: 1;
   }
 }
-
-/* ─── Overlay Menu (fullscreen, over expanded dot) ───────── */
 
 .overlay__menu {
   position: fixed;
@@ -164,8 +154,6 @@
   border-radius: 2px;
 }
 
-/* ─── Accessibility ──────────────────────────────────────── */
-
 @media (prefers-reduced-motion: reduce) {
   .overlay__title-dot,
   .overlay__title,
@@ -181,8 +169,6 @@
     }
   }
 }
-
-/* ─── Responsive ─────────────────────────────────────────── */
 
 @media (max-width: 768px) {
   .overlay__title {
