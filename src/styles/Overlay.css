@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 
+/* ─── Overlay Container ─────────────────────────────────── */
+
 .overlay__container {
   position: fixed;
   inset: 0;
@@ -16,13 +18,22 @@
   transform: translateZ(0);
   backface-visibility: hidden;
 }
+
+.overlay__container:focus-visible {
+  outline: 2px solid #792262;
+  outline-offset: -2px;
+}
+
+/* ─── Title (Greg . GS) ─────────────────────────────────── */
+
 .overlay__title-wrapper {
-  display: inline-block; 
-  white-space: nowrap; 
+  display: inline-block;
+  white-space: nowrap;
   text-align: center;
   position: relative;
   z-index: 1;
 }
+
 .overlay__title {
   display: inline-block;
   font-family: 'Montserrat', sans-serif;
@@ -36,9 +47,12 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ─── Dot ────────────────────────────────────────────────── */
+
 .overlay__title-dot {
-  display: inline-block; 
-  width: 2.5vw;              
+  display: inline-block;
+  width: 2.5vw;
   height: 2.5vw;
   border-radius: 50%;
   background-color: #792262;
@@ -49,10 +63,14 @@
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
+
 .overlay__title-dot[style*="scale"] {
   z-index: 9999 !important;
   transform-style: preserve-3d;
 }
+
+/* ─── Enter Message ──────────────────────────────────────── */
+
 .overlay__enter-message {
   position: absolute;
   top: 65vh;
@@ -74,10 +92,79 @@
   }
 }
 
-.overlay__container:focus-visible {
-  outline: 2px solid #792262;
-  outline-offset: -2px;
+/* ─── Overlay Menu (fullscreen, over expanded dot) ───────── */
+
+.overlay__menu {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  pointer-events: auto;
 }
+
+.overlay__menu-close {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  background: none;
+  border: none;
+  color: #FEFEFE;
+  font-size: 2.5rem;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 300;
+  line-height: 1;
+  padding: 0.5rem;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  z-index: 10001;
+}
+
+.overlay__menu-close:hover {
+  transform: scale(1.15);
+  opacity: 0.85;
+}
+
+.overlay__menu-close:focus-visible {
+  outline: 2px solid #FEFEFE;
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+.overlay__menu-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
+}
+
+.overlay__menu-item {
+  background: none;
+  border: none;
+  color: #FEFEFE;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 3.5vw;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: opacity 0.2s ease;
+}
+
+.overlay__menu-item:hover {
+  opacity: 0.75;
+}
+
+.overlay__menu-item:focus-visible {
+  outline: 2px solid #FEFEFE;
+  outline-offset: 6px;
+  border-radius: 2px;
+}
+
+/* ─── Accessibility ──────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
   .overlay__title-dot,
@@ -87,60 +174,74 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  
+
   @keyframes pulse {
     0%, 100% {
       opacity: 1;
     }
   }
 }
+
+/* ─── Responsive ─────────────────────────────────────────── */
+
 @media (max-width: 768px) {
   .overlay__title {
     font-size: 12vw;
   }
-  
+
   .overlay__title-dot {
     width: 3.5vw;
     height: 3.5vw;
   }
-  
+
   .overlay__enter-message {
     font-size: 3vw;
     top: 55vh;
   }
+
+  .overlay__menu-item {
+    font-size: 7vw;
+  }
+
+  .overlay__menu-nav {
+    gap: 2.5rem;
+  }
+
+  .overlay__menu-close {
+    font-size: 2rem;
+    top: 1.5rem;
+    right: 1.5rem;
+  }
 }
+
 @media (min-width: 769px) and (max-width: 1024px) {
   .overlay__enter-message {
     font-size: 2.5vw;
     top: 60vh;
   }
+
+  .overlay__menu-item {
+    font-size: 5vw;
+  }
 }
+
 @media (min-width: 1920px) {
   .overlay__title {
     font-size: 8vw;
   }
-  
+
   .overlay__title-dot {
     width: 2vw;
     height: 2vw;
     max-width: 40px;
     max-height: 40px;
   }
-  
+
   .overlay__enter-message {
     font-size: 1.2vw;
   }
-}
 
-.intro-overlay-wrapper {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 9999;
-  pointer-events: auto;
-}
-.intro-overlay-wrapper[style*="pointer-events: none"] {
-  pointer-events: none !important;
+  .overlay__menu-item {
+    font-size: 2.5vw;
+  }
 }

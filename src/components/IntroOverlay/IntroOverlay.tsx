@@ -4,13 +4,16 @@ import React from 'react';
 import IntroTitle from './IntroTitle';
 import IntroDot from './IntroDot';
 import IntroEnterMessage from './IntroEnterMessage';
-import { 
-  IntroOverlayProps, 
-  DotAnimationState, 
-  DotVariants 
+import OverlayMenu from './OverlayMenu';
+import {
+  IntroOverlayProps,
+  DotAnimationState,
+  DotVariants,
 } from '../../types';
 
 import '../../styles/Overlay.css';
+
+// ─── State ──────────────────────────────────────────────
 
 interface IntroOverlayState {
   dotAnimationState: DotAnimationState;
@@ -19,8 +22,11 @@ interface IntroOverlayState {
   hasStartedWiggle: boolean;
   hasOverlayBackground: boolean;
   isTouchDevice: boolean;
-  isFullyComplete: boolean;
+  menuOpen: boolean;
+  hasCompletedFirstOpen: boolean;
 }
+
+// ─── Actions ────────────────────────────────────────────
 
 type IntroOverlayAction =
   | { type: 'INIT_TOUCH_DEVICE'; isTouchDevice: boolean }
@@ -28,64 +34,76 @@ type IntroOverlayAction =
   | { type: 'START_WIGGLE_SEQUENCE' }
   | { type: 'TRANSITION_TO'; nextState: DotAnimationState }
   | { type: 'START_EXPANSION' }
-  | { type: 'START_CONTRACTION' }
-  | { type: 'HIDE_ELEMENTS' }
-  | { type: 'COMPLETE_ANIMATION' };
+  | { type: 'SHOW_MENU' }
+  | { type: 'START_CLOSE' }
+  | { type: 'RESET_TO_IDLE' };
+
+// ─── Reducer ────────────────────────────────────────────
 
 const introOverlayReducer = (
-  state: IntroOverlayState, 
+  state: IntroOverlayState,
   action: IntroOverlayAction
 ): IntroOverlayState => {
   switch (action.type) {
     case 'INIT_TOUCH_DEVICE':
       return { ...state, isTouchDevice: action.isTouchDevice };
-    
+
     case 'SHOW_ENTER_MESSAGE':
       return { ...state, showEnterMessage: true };
-    
+
     case 'START_WIGGLE_SEQUENCE':
       if (!state.hasStartedWiggle) {
         return {
           ...state,
           hasStartedWiggle: true,
-          dotAnimationState: 'wiggle1'
+          showEnterMessage: false,
+          dotAnimationState: 'wiggle1',
         };
       }
       return state;
-    
+
     case 'TRANSITION_TO':
       return { ...state, dotAnimationState: action.nextState };
-    
+
     case 'START_EXPANSION':
       return {
         ...state,
-        dotAnimationState: 'expand'
-      };
-    
-    case 'HIDE_ELEMENTS':
-      return {
-        ...state,
+        dotAnimationState: 'expand',
         showTitle: false,
-        hasOverlayBackground: true
+        showEnterMessage: false,
       };
-    
-    case 'START_CONTRACTION':
+
+    case 'SHOW_MENU':
       return {
         ...state,
+        menuOpen: true,
+        hasOverlayBackground: true,
+        hasCompletedFirstOpen: true,
+      };
+
+    case 'START_CLOSE':
+      return {
+        ...state,
+        menuOpen: false,
         dotAnimationState: 'contract',
-        hasOverlayBackground: false
       };
-    
-    case 'COMPLETE_ANIMATION':
+
+    case 'RESET_TO_IDLE':
       return {
         ...state,
-        isFullyComplete: true
+        dotAnimationState: 'idle',
+        showTitle: true,
+        showEnterMessage: true,
+        hasOverlayBackground: true,
+        hasStartedWiggle: false,
       };
-    
+
     default:
       return state;
   }
 };
+
+// ─── Dot Variants ───────────────────────────────────────
 
 const dotVariants: DotVariants = {
   hidden: {
@@ -99,6 +117,14 @@ const dotVariants: DotVariants = {
       duration: 5,
       ease: 'easeInOut',
       delay: 0.5,
+    },
+  },
+  idle: {
+    scale: 1,
+    x: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.01,
     },
   },
   wiggle1: {
@@ -139,20 +165,22 @@ const dotVariants: DotVariants = {
     transition: {
       duration: 2,
       ease: [0.4, 0, 0.2, 1],
-      times: [0, 0.5, 1]
+      times: [0, 0.5, 1],
     },
   },
   contract: {
-    scale: 0,
+    scale: 1,
     opacity: 1,
     transition: {
-      duration: 2,
-      ease: 'easeOut',
+      duration: 1.5,
+      ease: [0.4, 0, 0.2, 1],
     },
   },
 } as const;
 
-const IntroOverlay: React.FC<IntroOverlayProps> = ({ onFinish }) => {
+// ─── Component ──────────────────────────────────────────
+
+const IntroOverlay: React.FC<IntroOverlayProps> = () => {
   const initialState: IntroOverlayState = {
     dotAnimationState: 'fadeIn',
     showTitle: true,
@@ -160,10 +188,13 @@ const IntroOverlay: React.FC<IntroOverlayProps> = ({ onFinish }) => {
     hasStartedWiggle: false,
     hasOverlayBackground: true,
     isTouchDevice: false,
-    isFullyComplete: false,
+    menuOpen: false,
+    hasCompletedFirstOpen: false,
   };
 
   const [state, dispatch] = useReducer(introOverlayReducer, initialState);
+
+  // ── Init ──
 
   useEffect(() => {
     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -174,114 +205,130 @@ const IntroOverlay: React.FC<IntroOverlayProps> = ({ onFinish }) => {
     dispatch({ type: 'SHOW_ENTER_MESSAGE' });
   }, []);
 
+  // ── User click on the overlay (Greg.GS screen) ──
+
   const handleUserInteraction = useCallback(() => {
-    if (!state.hasStartedWiggle) {
-      console.log('Starting wiggle sequence');
-      dispatch({ type: 'START_WIGGLE_SEQUENCE' });
+    if (state.menuOpen) return;
+
+    if (!state.hasCompletedFirstOpen) {
+      // First time: run the full wiggle → expand sequence
+      if (!state.hasStartedWiggle) {
+        dispatch({ type: 'START_WIGGLE_SEQUENCE' });
+      }
+    } else {
+      // Subsequent times: expand directly (skip wiggle)
+      dispatch({ type: 'START_EXPANSION' });
     }
-  }, [state.hasStartedWiggle]);
+  }, [state.menuOpen, state.hasCompletedFirstOpen, state.hasStartedWiggle]);
+
+  // ── Close menu (✕ button) ──
+
+  const handleMenuClose = useCallback(() => {
+    dispatch({ type: 'START_CLOSE' });
+  }, []);
+
+  // ── Animation state machine ──
 
   const handleDotAnimationComplete = useCallback((
     previousState: DotAnimationState
   ) => {
-    console.log(`✅ Animation terminée: ${previousState}`);
-    
-    const transitions: Record<DotAnimationState, () => void> = {
+    const transitions: Partial<Record<DotAnimationState, () => void>> = {
       fadeIn: () => {
-        console.log('FadeIn complete - waiting for user interaction');
+        // Waiting for user interaction
+      },
+      idle: () => {
+        // Stable state, waiting for user interaction
       },
       wiggle1: () => {
-        console.log('Wiggle1 complete -> pause');
         dispatch({ type: 'TRANSITION_TO', nextState: 'pause' });
       },
       pause: () => {
-        console.log('Pause complete -> wiggle2');
         setTimeout(() => {
           dispatch({ type: 'TRANSITION_TO', nextState: 'wiggle2' });
         }, 1000);
       },
       wiggle2: () => {
-        console.log('Wiggle2 complete -> secondPause');
         setTimeout(() => {
           dispatch({ type: 'TRANSITION_TO', nextState: 'secondPause' });
         }, 1000);
       },
       secondPause: () => {
-        console.log('SecondPause complete -> expand');
         dispatch({ type: 'START_EXPANSION' });
       },
       expand: () => {
-        console.log('🔵 EXPAND COMPLETE - Starting contraction');
-        
-        setTimeout(() => {
-          console.log('🔴 Starting contraction and hiding elements');
-          dispatch({ type: 'HIDE_ELEMENTS' });
-          dispatch({ type: 'START_CONTRACTION' });
-        }, 2500);
+        // Expansion complete → show the menu
+        dispatch({ type: 'SHOW_MENU' });
       },
       contract: () => {
-        console.log('✅ CONTRACT COMPLETE - Animation fully finished');
-        dispatch({ type: 'COMPLETE_ANIMATION' });
-        
-        setTimeout(() => {
-          console.log('🎯 Calling onFinish');
-          onFinish?.();
-        }, 500);
+        // Contraction complete → reset to idle (Greg.GS visible)
+        dispatch({ type: 'RESET_TO_IDLE' });
       },
     };
 
     const transition = transitions[previousState];
-    transition();
-  }, [onFinish]);
+    if (transition) transition();
+  }, []);
 
-  useEffect(() => {
-    console.log('Current animation state:', state.dotAnimationState);
-  }, [state.dotAnimationState]);
+  // ── Render ──
 
   const containerStyle = {
     backgroundColor: state.hasOverlayBackground ? '#FEFEFE' : 'transparent',
     transition: 'background-color 0.5s ease-out',
   };
 
+  const isInteractive = !state.menuOpen
+    && state.dotAnimationState !== 'expand'
+    && state.dotAnimationState !== 'contract';
+
   return (
     <div
       className="overlay__container"
-      onClick={handleUserInteraction}
+      onClick={isInteractive ? handleUserInteraction : undefined}
       style={containerStyle}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (isInteractive && (e.key === 'Enter' || e.key === ' ')) {
           handleUserInteraction();
         }
       }}
-      aria-label="Cliquez pour entrer dans le site"
+      aria-label="Cliquez pour ouvrir le menu"
     >
-      <div className='overlay__title-wrapper'>
+      {/* ── Greg . GS title ── */}
+      <div className="overlay__title-wrapper">
         {state.showTitle && (
-          <IntroTitle 
-            text='Greg' 
-            handleTitleAnimationComplete={handleTitleAnimationComplete} 
+          <IntroTitle
+            text="Greg"
+            handleTitleAnimationComplete={handleTitleAnimationComplete}
           />
         )}
-        
+
         <IntroDot
           variant={dotVariants}
           animationState={state.dotAnimationState}
           handleDotAnimationComplete={handleDotAnimationComplete}
         />
-        
+
         {state.showTitle && (
-          <IntroTitle 
-            text='GS' 
-            handleTitleAnimationComplete={handleTitleAnimationComplete} 
+          <IntroTitle
+            text="GS"
+            handleTitleAnimationComplete={handleTitleAnimationComplete}
           />
         )}
       </div>
-      
-      {state.showEnterMessage && state.dotAnimationState === 'fadeIn' && (
-        <IntroEnterMessage isTouchDevice={state.isTouchDevice} />
-      )}
+
+      {/* ── Enter message ── */}
+      {state.showEnterMessage
+        && (state.dotAnimationState === 'fadeIn' || state.dotAnimationState === 'idle')
+        && (
+          <IntroEnterMessage isTouchDevice={state.isTouchDevice} />
+        )}
+
+      {/* ── Fullscreen menu (visible when expanded) ── */}
+      <OverlayMenu
+        isVisible={state.menuOpen}
+        onClose={handleMenuClose}
+      />
     </div>
   );
 };

@@ -1,13 +1,10 @@
 import { Variant, Variants } from 'framer-motion';
 
-export interface AnimationProps {
-    animateExit: boolean;
-    duration?: number;
-    delay?: number;
-}
+// --- Dot Animation ---
 
 export type DotAnimationState =
     | 'fadeIn'
+    | 'idle'
     | 'wiggle1'
     | 'pause'
     | 'wiggle2'
@@ -18,6 +15,7 @@ export type DotAnimationState =
 export interface DotVariants extends Variants {
     hidden: Variant;
     fadeIn: Variant;
+    idle: Variant;
     wiggle1: Variant;
     pause: Variant;
     wiggle2: Variant;
@@ -26,34 +24,38 @@ export interface DotVariants extends Variants {
     contract: Variant;
 }
 
-export interface HomePageMenuProps extends Pick<AnimationProps, 'animateExit'> {
-    onAboutClick: () => void;
-}
-export interface HomePageBackgroundProps {
-    animateExit: boolean;
-}
-export type HomePageTitleProps = Pick<AnimationProps, 'animateExit'>
-export type HomePageFooterProps = Pick<AnimationProps, 'animateExit'>
-export type HomePageSocialsProps = Pick<AnimationProps, 'animateExit'>
+// --- IntroOverlay ---
 
-export interface IntroOverlayProps {
-    onFinish?: () => void;
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface IntroOverlayProps {}
+
 export interface IntroTitleProps {
     text: string;
     handleTitleAnimationComplete: () => void;
 }
+
 export interface IntroDotProps {
     variant: DotVariants;
     animationState: DotAnimationState;
     handleDotAnimationComplete: (animationName: DotAnimationState) => void;
 }
+
 export interface IntroEnterMessageProps {
     isTouchDevice: boolean;
 }
 
-export type HomeProps = Record<string, never>;
+// --- Overlay Menu ---
+
+export interface OverlayMenuProps {
+    onClose: () => void;
+    isVisible: boolean;
+}
+
+// --- Pages ---
+
 export type AboutProps = Record<string, never>;
+
+// --- Utilities ---
 
 export type NavigationHandler = () => void;
 export type AnimationCallback = () => void;
