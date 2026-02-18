@@ -17,7 +17,7 @@ import '../../styles/Overlay.css';
 
 interface IntroOverlayState {
   dotAnimationState: DotAnimationState;
-  showTitle: boolean;
+  titlesVisible: boolean;
   showEnterMessage: boolean;
   hasStartedWiggle: boolean;
   hasOverlayBackground: boolean;
@@ -69,7 +69,9 @@ const introOverlayReducer = (
       return {
         ...state,
         dotAnimationState: 'expand',
-        showTitle: false,
+        // Titles stay in DOM (opacity → 0 via prop) so the dot
+        // expands from its real position between "Greg" and "GS"
+        titlesVisible: false,
         showEnterMessage: false,
       };
 
@@ -92,9 +94,10 @@ const introOverlayReducer = (
       return {
         ...state,
         dotAnimationState: 'idle',
-        showTitle: true,
+        titlesVisible: true,
         showEnterMessage: true,
         hasOverlayBackground: true,
+        // Reset so wiggles can fire again on next click
         hasStartedWiggle: false,
       };
 
@@ -183,7 +186,7 @@ const dotVariants: DotVariants = {
 const IntroOverlay: React.FC<IntroOverlayProps> = () => {
   const initialState: IntroOverlayState = {
     dotAnimationState: 'fadeIn',
-    showTitle: true,
+    titlesVisible: true,
     showEnterMessage: false,
     hasStartedWiggle: false,
     hasOverlayBackground: true,
@@ -210,16 +213,11 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
   const handleUserInteraction = useCallback(() => {
     if (state.menuOpen) return;
 
-    if (!state.hasCompletedFirstOpen) {
-      // First time: run the full wiggle → expand sequence
-      if (!state.hasStartedWiggle) {
-        dispatch({ type: 'START_WIGGLE_SEQUENCE' });
-      }
-    } else {
-      // Subsequent times: expand directly (skip wiggle)
-      dispatch({ type: 'START_EXPANSION' });
+    // Always run wiggle sequence (fires on every open)
+    if (!state.hasStartedWiggle) {
+      dispatch({ type: 'START_WIGGLE_SEQUENCE' });
     }
-  }, [state.menuOpen, state.hasCompletedFirstOpen, state.hasStartedWiggle]);
+  }, [state.menuOpen, state.hasStartedWiggle]);
 
   // ── Close menu (✕ button) ──
 
@@ -256,11 +254,9 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
         dispatch({ type: 'START_EXPANSION' });
       },
       expand: () => {
-        // Expansion complete → show the menu
         dispatch({ type: 'SHOW_MENU' });
       },
       contract: () => {
-        // Contraction complete → reset to idle (Greg.GS visible)
         dispatch({ type: 'RESET_TO_IDLE' });
       },
     };
@@ -278,7 +274,11 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
 
   const isInteractive = !state.menuOpen
     && state.dotAnimationState !== 'expand'
-    && state.dotAnimationState !== 'contract';
+    && state.dotAnimationState !== 'contract'
+    && state.dotAnimationState !== 'wiggle1'
+    && state.dotAnimationState !== 'wiggle2'
+    && state.dotAnimationState !== 'pause'
+    && state.dotAnimationState !== 'secondPause';
 
   return (
     <div
@@ -294,14 +294,16 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
       }}
       aria-label="Cliquez pour ouvrir le menu"
     >
-      {/* ── Greg . GS title ── */}
+      {/* ── Greg . GS ── 
+          Titles are ALWAYS in the DOM so the dot stays in position
+          during expand/contract. Visibility is controlled via opacity. */}
       <div className="overlay__title-wrapper">
-        {state.showTitle && (
-          <IntroTitle
-            text="Greg"
-            handleTitleAnimationComplete={handleTitleAnimationComplete}
-          />
-        )}
+        <IntroTitle
+          text="Greg"
+          visible={state.titlesVisible}
+          skipAnimation={state.hasCompletedFirstOpen}
+          handleTitleAnimationComplete={handleTitleAnimationComplete}
+        />
 
         <IntroDot
           variant={dotVariants}
@@ -309,12 +311,12 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
           handleDotAnimationComplete={handleDotAnimationComplete}
         />
 
-        {state.showTitle && (
-          <IntroTitle
-            text="GS"
-            handleTitleAnimationComplete={handleTitleAnimationComplete}
-          />
-        )}
+        <IntroTitle
+          text="GS"
+          visible={state.titlesVisible}
+          skipAnimation={state.hasCompletedFirstOpen}
+          handleTitleAnimationComplete={handleTitleAnimationComplete}
+        />
       </div>
 
       {/* ── Enter message ── */}

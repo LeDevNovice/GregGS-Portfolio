@@ -31,6 +31,8 @@ export interface IntroOverlayProps {}
 
 export interface IntroTitleProps {
     text: string;
+    visible: boolean;
+    skipAnimation: boolean;
     handleTitleAnimationComplete: () => void;
 }
 
