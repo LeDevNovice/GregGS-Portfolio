@@ -4,22 +4,22 @@ import React from 'react';
 import IntroTitle from './IntroTitle';
 import IntroDot from './IntroDot';
 import IntroEnterMessage from './IntroEnterMessage';
-import { 
-  IntroOverlayProps, 
-  DotAnimationState, 
-  DotVariants 
+import OverlayMenu from './OverlayMenu';
+import {
+  IntroOverlayProps,
+  DotAnimationState,
+  DotVariants,
 } from '../../types';
-
 import '../../styles/Overlay.css';
-
 interface IntroOverlayState {
   dotAnimationState: DotAnimationState;
-  showTitle: boolean;
+  titlesVisible: boolean;
   showEnterMessage: boolean;
   hasStartedWiggle: boolean;
   hasOverlayBackground: boolean;
   isTouchDevice: boolean;
-  isFullyComplete: boolean;
+  menuOpen: boolean;
+  hasCompletedFirstOpen: boolean;
 }
 
 type IntroOverlayAction =
@@ -28,60 +28,68 @@ type IntroOverlayAction =
   | { type: 'START_WIGGLE_SEQUENCE' }
   | { type: 'TRANSITION_TO'; nextState: DotAnimationState }
   | { type: 'START_EXPANSION' }
-  | { type: 'START_CONTRACTION' }
-  | { type: 'HIDE_ELEMENTS' }
-  | { type: 'COMPLETE_ANIMATION' };
+  | { type: 'SHOW_MENU' }
+  | { type: 'START_CLOSE' }
+  | { type: 'RESET_TO_IDLE' };
 
 const introOverlayReducer = (
-  state: IntroOverlayState, 
+  state: IntroOverlayState,
   action: IntroOverlayAction
 ): IntroOverlayState => {
   switch (action.type) {
     case 'INIT_TOUCH_DEVICE':
       return { ...state, isTouchDevice: action.isTouchDevice };
-    
+
     case 'SHOW_ENTER_MESSAGE':
       return { ...state, showEnterMessage: true };
-    
+
     case 'START_WIGGLE_SEQUENCE':
       if (!state.hasStartedWiggle) {
         return {
           ...state,
           hasStartedWiggle: true,
-          dotAnimationState: 'wiggle1'
+          showEnterMessage: false,
+          dotAnimationState: 'wiggle1',
         };
       }
       return state;
-    
+
     case 'TRANSITION_TO':
       return { ...state, dotAnimationState: action.nextState };
-    
+
     case 'START_EXPANSION':
       return {
         ...state,
-        dotAnimationState: 'expand'
+        dotAnimationState: 'expand',
+        titlesVisible: false,
+        showEnterMessage: false,
       };
-    
-    case 'HIDE_ELEMENTS':
+
+    case 'SHOW_MENU':
       return {
         ...state,
-        showTitle: false,
-        hasOverlayBackground: true
+        menuOpen: true,
+        hasOverlayBackground: true,
+        hasCompletedFirstOpen: true,
       };
-    
-    case 'START_CONTRACTION':
+
+    case 'START_CLOSE':
       return {
         ...state,
+        menuOpen: false,
         dotAnimationState: 'contract',
-        hasOverlayBackground: false
       };
-    
-    case 'COMPLETE_ANIMATION':
+
+    case 'RESET_TO_IDLE':
       return {
         ...state,
-        isFullyComplete: true
+        dotAnimationState: 'idle',
+        titlesVisible: true,
+        showEnterMessage: true,
+        hasOverlayBackground: true,
+        hasStartedWiggle: false,
       };
-    
+
     default:
       return state;
   }
@@ -99,6 +107,14 @@ const dotVariants: DotVariants = {
       duration: 5,
       ease: 'easeInOut',
       delay: 0.5,
+    },
+  },
+  idle: {
+    scale: 1,
+    x: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.01,
     },
   },
   wiggle1: {
@@ -139,28 +155,29 @@ const dotVariants: DotVariants = {
     transition: {
       duration: 2,
       ease: [0.4, 0, 0.2, 1],
-      times: [0, 0.5, 1]
+      times: [0, 0.5, 1],
     },
   },
   contract: {
-    scale: 0,
+    scale: 1,
     opacity: 1,
     transition: {
-      duration: 2,
-      ease: 'easeOut',
+      duration: 1.5,
+      ease: [0.4, 0, 0.2, 1],
     },
   },
 } as const;
 
-const IntroOverlay: React.FC<IntroOverlayProps> = ({ onFinish }) => {
+const IntroOverlay: React.FC<IntroOverlayProps> = () => {
   const initialState: IntroOverlayState = {
     dotAnimationState: 'fadeIn',
-    showTitle: true,
+    titlesVisible: true,
     showEnterMessage: false,
     hasStartedWiggle: false,
     hasOverlayBackground: true,
     isTouchDevice: false,
-    isFullyComplete: false,
+    menuOpen: false,
+    hasCompletedFirstOpen: false,
   };
 
   const [state, dispatch] = useReducer(introOverlayReducer, initialState);
@@ -175,113 +192,112 @@ const IntroOverlay: React.FC<IntroOverlayProps> = ({ onFinish }) => {
   }, []);
 
   const handleUserInteraction = useCallback(() => {
+    if (state.menuOpen) return;
+
     if (!state.hasStartedWiggle) {
-      console.log('Starting wiggle sequence');
       dispatch({ type: 'START_WIGGLE_SEQUENCE' });
     }
-  }, [state.hasStartedWiggle]);
+  }, [state.menuOpen, state.hasStartedWiggle]);
+
+  const handleMenuClose = useCallback(() => {
+    dispatch({ type: 'START_CLOSE' });
+  }, []);
 
   const handleDotAnimationComplete = useCallback((
     previousState: DotAnimationState
   ) => {
-    console.log(`✅ Animation terminée: ${previousState}`);
-    
-    const transitions: Record<DotAnimationState, () => void> = {
-      fadeIn: () => {
-        console.log('FadeIn complete - waiting for user interaction');
-      },
+    const transitions: Partial<Record<DotAnimationState, () => void>> = {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      fadeIn: () => { },
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      idle: () => { },
       wiggle1: () => {
-        console.log('Wiggle1 complete -> pause');
         dispatch({ type: 'TRANSITION_TO', nextState: 'pause' });
       },
       pause: () => {
-        console.log('Pause complete -> wiggle2');
         setTimeout(() => {
           dispatch({ type: 'TRANSITION_TO', nextState: 'wiggle2' });
         }, 1000);
       },
       wiggle2: () => {
-        console.log('Wiggle2 complete -> secondPause');
         setTimeout(() => {
           dispatch({ type: 'TRANSITION_TO', nextState: 'secondPause' });
         }, 1000);
       },
       secondPause: () => {
-        console.log('SecondPause complete -> expand');
         dispatch({ type: 'START_EXPANSION' });
       },
       expand: () => {
-        console.log('🔵 EXPAND COMPLETE - Starting contraction');
-        
-        setTimeout(() => {
-          console.log('🔴 Starting contraction and hiding elements');
-          dispatch({ type: 'HIDE_ELEMENTS' });
-          dispatch({ type: 'START_CONTRACTION' });
-        }, 2500);
+        dispatch({ type: 'SHOW_MENU' });
       },
       contract: () => {
-        console.log('✅ CONTRACT COMPLETE - Animation fully finished');
-        dispatch({ type: 'COMPLETE_ANIMATION' });
-        
-        setTimeout(() => {
-          console.log('🎯 Calling onFinish');
-          onFinish?.();
-        }, 500);
+        dispatch({ type: 'RESET_TO_IDLE' });
       },
     };
 
     const transition = transitions[previousState];
-    transition();
-  }, [onFinish]);
-
-  useEffect(() => {
-    console.log('Current animation state:', state.dotAnimationState);
-  }, [state.dotAnimationState]);
+    if (transition) transition();
+  }, []);
 
   const containerStyle = {
     backgroundColor: state.hasOverlayBackground ? '#FEFEFE' : 'transparent',
     transition: 'background-color 0.5s ease-out',
   };
 
+  const isInteractive = !state.menuOpen
+    && state.dotAnimationState !== 'expand'
+    && state.dotAnimationState !== 'contract'
+    && state.dotAnimationState !== 'wiggle1'
+    && state.dotAnimationState !== 'wiggle2'
+    && state.dotAnimationState !== 'pause'
+    && state.dotAnimationState !== 'secondPause';
+
   return (
     <div
       className="overlay__container"
-      onClick={handleUserInteraction}
+      onClick={isInteractive ? handleUserInteraction : undefined}
       style={containerStyle}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (isInteractive && (e.key === 'Enter' || e.key === ' ')) {
           handleUserInteraction();
         }
       }}
-      aria-label="Cliquez pour entrer dans le site"
+      aria-label="Cliquez pour ouvrir le menu"
     >
-      <div className='overlay__title-wrapper'>
-        {state.showTitle && (
-          <IntroTitle 
-            text='Greg' 
-            handleTitleAnimationComplete={handleTitleAnimationComplete} 
-          />
-        )}
-        
+      <div className="overlay__title-wrapper">
+        <IntroTitle
+          text="Greg"
+          visible={state.titlesVisible}
+          skipAnimation={state.hasCompletedFirstOpen}
+          handleTitleAnimationComplete={handleTitleAnimationComplete}
+        />
+
         <IntroDot
           variant={dotVariants}
           animationState={state.dotAnimationState}
           handleDotAnimationComplete={handleDotAnimationComplete}
         />
-        
-        {state.showTitle && (
-          <IntroTitle 
-            text='GS' 
-            handleTitleAnimationComplete={handleTitleAnimationComplete} 
-          />
-        )}
+
+        <IntroTitle
+          text="GS"
+          visible={state.titlesVisible}
+          skipAnimation={state.hasCompletedFirstOpen}
+          handleTitleAnimationComplete={handleTitleAnimationComplete}
+        />
       </div>
-      
-      {state.showEnterMessage && state.dotAnimationState === 'fadeIn' && (
-        <IntroEnterMessage isTouchDevice={state.isTouchDevice} />
-      )}
+
+      {state.showEnterMessage
+        && (state.dotAnimationState === 'fadeIn' || state.dotAnimationState === 'idle')
+        && (
+          <IntroEnterMessage isTouchDevice={state.isTouchDevice} />
+        )}
+
+      <OverlayMenu
+        isVisible={state.menuOpen}
+        onClose={handleMenuClose}
+      />
     </div>
   );
 };
