@@ -5,12 +5,18 @@ import IntroTitle from './IntroTitle';
 import IntroDot from './IntroDot';
 import IntroEnterMessage from './IntroEnterMessage';
 import OverlayMenu from './OverlayMenu';
+import ContentPanel from '../Panel/ContentPanel';
 import {
   IntroOverlayProps,
   DotAnimationState,
   DotVariants,
+  SectionId,
 } from '../../types';
+
 import '../../styles/Overlay.css';
+
+// ─── State ──────────────────────────────────────────────
+
 interface IntroOverlayState {
   dotAnimationState: DotAnimationState;
   titlesVisible: boolean;
@@ -20,7 +26,12 @@ interface IntroOverlayState {
   isTouchDevice: boolean;
   menuOpen: boolean;
   hasCompletedFirstOpen: boolean;
+  // Panel
+  activeSection: SectionId | null;
+  panelVisible: boolean;
 }
+
+// ─── Actions ────────────────────────────────────────────
 
 type IntroOverlayAction =
   | { type: 'INIT_TOUCH_DEVICE'; isTouchDevice: boolean }
@@ -30,7 +41,11 @@ type IntroOverlayAction =
   | { type: 'START_EXPANSION' }
   | { type: 'SHOW_MENU' }
   | { type: 'START_CLOSE' }
-  | { type: 'RESET_TO_IDLE' };
+  | { type: 'RESET_TO_IDLE' }
+  | { type: 'NAVIGATE_TO_SECTION'; section: SectionId }
+  | { type: 'PANEL_CLOSED' };
+
+// ─── Reducer ────────────────────────────────────────────
 
 const introOverlayReducer = (
   state: IntroOverlayState,
@@ -90,10 +105,30 @@ const introOverlayReducer = (
         hasStartedWiggle: false,
       };
 
+    // ── Panel transitions ──
+
+    case 'NAVIGATE_TO_SECTION':
+      return {
+        ...state,
+        menuOpen: false,
+        activeSection: action.section,
+        panelVisible: true,
+      };
+
+    case 'PANEL_CLOSED':
+      return {
+        ...state,
+        panelVisible: false,
+        activeSection: null,
+        menuOpen: true,
+      };
+
     default:
       return state;
   }
 };
+
+// ─── Dot Variants ───────────────────────────────────────
 
 const dotVariants: DotVariants = {
   hidden: {
@@ -168,6 +203,8 @@ const dotVariants: DotVariants = {
   },
 } as const;
 
+// ─── Component ──────────────────────────────────────────
+
 const IntroOverlay: React.FC<IntroOverlayProps> = () => {
   const initialState: IntroOverlayState = {
     dotAnimationState: 'fadeIn',
@@ -178,9 +215,13 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
     isTouchDevice: false,
     menuOpen: false,
     hasCompletedFirstOpen: false,
+    activeSection: null,
+    panelVisible: false,
   };
 
   const [state, dispatch] = useReducer(introOverlayReducer, initialState);
+
+  // ── Init ──
 
   useEffect(() => {
     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -191,17 +232,33 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
     dispatch({ type: 'SHOW_ENTER_MESSAGE' });
   }, []);
 
+  // ── User click on the overlay (Greg.GS screen) ──
+
   const handleUserInteraction = useCallback(() => {
-    if (state.menuOpen) return;
+    if (state.menuOpen || state.panelVisible) return;
 
     if (!state.hasStartedWiggle) {
       dispatch({ type: 'START_WIGGLE_SEQUENCE' });
     }
-  }, [state.menuOpen, state.hasStartedWiggle]);
+  }, [state.menuOpen, state.panelVisible, state.hasStartedWiggle]);
+
+  // ── Menu handlers ──
 
   const handleMenuClose = useCallback(() => {
     dispatch({ type: 'START_CLOSE' });
   }, []);
+
+  const handleNavigateToSection = useCallback((section: SectionId) => {
+    dispatch({ type: 'NAVIGATE_TO_SECTION', section });
+  }, []);
+
+  // ── Panel closed → back to menu ──
+
+  const handlePanelClosed = useCallback(() => {
+    dispatch({ type: 'PANEL_CLOSED' });
+  }, []);
+
+  // ── Animation state machine ──
 
   const handleDotAnimationComplete = useCallback((
     previousState: DotAnimationState
@@ -239,12 +296,15 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
     if (transition) transition();
   }, []);
 
+  // ── Render ──
+
   const containerStyle = {
     backgroundColor: state.hasOverlayBackground ? '#FEFEFE' : 'transparent',
     transition: 'background-color 0.5s ease-out',
   };
 
   const isInteractive = !state.menuOpen
+    && !state.panelVisible
     && state.dotAnimationState !== 'expand'
     && state.dotAnimationState !== 'contract'
     && state.dotAnimationState !== 'wiggle1'
@@ -266,6 +326,7 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
       }}
       aria-label="Cliquez pour ouvrir le menu"
     >
+      {/* ── Greg . GS ── */}
       <div className="overlay__title-wrapper">
         <IntroTitle
           text="Greg"
@@ -288,15 +349,25 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
         />
       </div>
 
+      {/* ── Enter message ── */}
       {state.showEnterMessage
         && (state.dotAnimationState === 'fadeIn' || state.dotAnimationState === 'idle')
         && (
           <IntroEnterMessage isTouchDevice={state.isTouchDevice} />
         )}
 
+      {/* ── Fullscreen menu ── */}
       <OverlayMenu
         isVisible={state.menuOpen}
         onClose={handleMenuClose}
+        onNavigate={handleNavigateToSection}
+      />
+
+      {/* ── Content panel ── */}
+      <ContentPanel
+        isVisible={state.panelVisible}
+        section={state.activeSection}
+        onClosed={handlePanelClosed}
       />
     </div>
   );
