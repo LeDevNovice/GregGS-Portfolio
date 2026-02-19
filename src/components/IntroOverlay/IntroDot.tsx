@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-
 import { IntroDotProps } from '../../types';
 import '../../styles/Overlay.css';
 
@@ -12,7 +11,10 @@ const IntroDot: React.FC<IntroDotProps> = ({
     handleDotAnimationComplete(animationState);
   };
 
-  const needsHighZ = animationState === 'expand' || animationState === 'contract';
+  const needsHighZ =
+    animationState === 'expand' ||
+    animationState === 'expanded' ||
+    animationState === 'contract';
 
   return (
     <motion.span

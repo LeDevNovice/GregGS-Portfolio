@@ -14,7 +14,15 @@ const sectionTitles: Record<SectionId, string> = {
   projects: 'Projets',
 };
 
-// ─── Internal phase machine ─────────────────────────────
+// ─── Phase machine ──────────────────────────────────────
+//
+//  B→C (open):
+//    idle → (300ms) → morphing-in → color-shift-in → (500ms) → open
+//
+//  C→B (close):
+//    open → closing-content → (400ms) → color-shift-out → (500ms)
+//         → morphing-out → idle + onClosed()
+//
 
 type PanelPhase =
   | 'idle'
@@ -25,19 +33,19 @@ type PanelPhase =
   | 'color-shift-out'
   | 'morphing-out';
 
-// ─── Animation config ───────────────────────────────────
+// ─── Timing ─────────────────────────────────────────────
 
 const TIMING = {
-  MORPH_IN_DELAY: 300,     // wait for menu exit
-  MORPH_DURATION: 800,     // violet contracts to panel
-  COLOR_SHIFT: 500,        // violet → white
-  CONTENT_FADE_IN: 400,    // content appears
-  CONTENT_FADE_OUT: 300,   // content disappears
-  COLOR_SHIFT_OUT: 500,    // white → violet
-  MORPH_OUT_DURATION: 800, // panel expands to fullscreen
+  MORPH_IN_DELAY: 300,
+  MORPH_DURATION: 800,
+  COLOR_SHIFT: 500,
+  CONTENT_FADE_IN: 400,
+  CONTENT_FADE_OUT: 300,
+  COLOR_SHIFT_OUT: 500,
+  MORPH_OUT_DURATION: 800,
 } as const;
 
-const morphEasing = [0.4, 0, 0.2, 1];
+const morphEasing: [number, number, number, number] = [0.4, 0, 0.2, 1];
 
 // ─── Content variants ───────────────────────────────────
 
@@ -64,7 +72,7 @@ const contentVariants = {
   },
 } as const;
 
-const dotVariants = {
+const dotFadeVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -86,133 +94,144 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   const [phase, setPhase] = useState<PanelPhase>('idle');
   const [displaySection, setDisplaySection] = useState<SectionId | null>(null);
 
-  // ── Open sequence ──
+  // ── B→C: Start open sequence ──
 
   useEffect(() => {
     if (isVisible && section && phase === 'idle') {
       setDisplaySection(section);
 
-      // Delay before starting morph (let menu exit first)
+      // Wait for OverlayMenu exit animation, then start morphing
       const timer = setTimeout(() => {
         setPhase('morphing-in');
       }, TIMING.MORPH_IN_DELAY);
 
-      // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression, @typescript-eslint/explicit-function-return-type
-      return () => clearTimeout(timer);
+      return () => { clearTimeout(timer); };
     }
   }, [isVisible, section, phase]);
 
-  // ── Phase transitions after morph-in ──
+  // ── After morph-in: color shift violet → white ──
 
   useEffect(() => {
     if (phase === 'color-shift-in') {
       const timer = setTimeout(() => {
         setPhase('open');
       }, TIMING.COLOR_SHIFT);
-      // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression, @typescript-eslint/explicit-function-return-type
-      return () => clearTimeout(timer);
+      return () => { clearTimeout(timer); };
     }
   }, [phase]);
 
-  // ── Phase transitions during close ──
+  // ── C→B: Content faded out → start color shift white → violet ──
 
   useEffect(() => {
     if (phase === 'closing-content') {
       const timer = setTimeout(() => {
         setPhase('color-shift-out');
       }, TIMING.CONTENT_FADE_OUT + 100);
-      // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression, @typescript-eslint/explicit-function-return-type
-      return () => clearTimeout(timer);
+      return () => { clearTimeout(timer); };
     }
   }, [phase]);
+
+  // ── After color shift out: start morph back to fullscreen ──
 
   useEffect(() => {
     if (phase === 'color-shift-out') {
       const timer = setTimeout(() => {
         setPhase('morphing-out');
       }, TIMING.COLOR_SHIFT_OUT);
-      // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression, @typescript-eslint/explicit-function-return-type
-      return () => clearTimeout(timer);
+      return () => { clearTimeout(timer); };
     }
   }, [phase]);
 
-  // ── Close handler (from PanelDot) ──
+  // ── PanelDot click → start close sequence ──
 
   const handleClose = useCallback(() => {
     if (phase !== 'open') return;
     setPhase('closing-content');
   }, [phase]);
 
-  // ── Morph animation complete ──
+  // ── Morph animation complete callback ──
 
-  const handleMorphComplete = useCallback(() => {
+  const handleMorphComplete = useCallback((): void => {
     if (phase === 'morphing-in') {
       setPhase('color-shift-in');
     } else if (phase === 'morphing-out') {
+      // Panel is now fullscreen violet again.
+      // Reset internal state, then tell IntroOverlay we're done.
       setPhase('idle');
       setDisplaySection(null);
       onClosed();
     }
   }, [phase, onClosed]);
 
-  // ── Don't render if idle ──
+  // ── Don't render when fully idle and not visible ──
 
   if (phase === 'idle' && !isVisible) return null;
 
-  // ── Compute animation targets ──
+  // ── Derived animation states ──
 
-  const isExpanded = phase === 'morphing-out';
+  // Panel is fullscreen (100vw×100vh) when just mounted or morphing back out.
+  // All other phases → contracted to panel size.
+  const isFullscreen = phase === 'idle' || phase === 'morphing-out';
+
+  // Panel background is white during these phases (CSS transition handles the animation)
   const isWhite =
     phase === 'color-shift-in' ||
     phase === 'open' ||
     phase === 'closing-content';
-  const showContent = phase === 'open';
+
+  // Show the PanelDot once color shift starts (it appears as the panel turns white)
   const showDot =
     phase === 'color-shift-in' ||
     phase === 'open' ||
     phase === 'closing-content';
 
+  // Show the actual page content only when fully open
+  const showContent = phase === 'open';
+
+  // Only run the morph transition during morphing phases
+  const isMorphing = phase === 'morphing-in' || phase === 'morphing-out';
+  const morphDuration = phase === 'morphing-in'
+    ? TIMING.MORPH_DURATION / 1000
+    : TIMING.MORPH_OUT_DURATION / 1000;
+
   return (
     <motion.div
       className="content-panel"
+      data-bg={isWhite ? 'white' : 'purple'}
 
-      /* ── Morph animation ── */
       initial={{
         width: '100vw',
         height: '100vh',
         borderRadius: 0,
       }}
+
       animate={{
-        width: isExpanded ? '100vw' : '88vw',
-        height: isExpanded ? '100vh' : '85vh',
-        borderRadius: isExpanded ? 0 : 24,
+        width: isFullscreen ? '100vw' : '88vw',
+        height: isFullscreen ? '100vh' : '85vh',
+        borderRadius: isFullscreen ? 0 : 24,
       }}
+
       transition={{
-        duration:
-          phase === 'morphing-in'
-            ? TIMING.MORPH_DURATION / 1000
-            : TIMING.MORPH_OUT_DURATION / 1000,
+        duration: isMorphing ? morphDuration : 0,
         ease: morphEasing,
       }}
-      onAnimationComplete={handleMorphComplete}
 
-      /* ── Background color controlled via CSS class ── */
-      data-bg={isWhite ? 'white' : 'purple'}
+      onAnimationComplete={handleMorphComplete}
 
       role="dialog"
       aria-modal="true"
       aria-label={displaySection ? sectionTitles[displaySection] : undefined}
     >
-      {/* ── PanelDot ── */}
+      {/* ── PanelDot (top-left, visible during white phase) ── */}
       <AnimatePresence>
         {showDot && (
           <motion.div
             key="panel-dot"
-            variants={dotVariants}
+            className="content-panel__dot-area"
+            variants={dotFadeVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="content-panel__dot-area"
           >
             <PanelDot onClick={handleClose} />
           </motion.div>
@@ -230,7 +249,6 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
             animate="visible"
             exit="exit"
           >
-            {/* ── Header ── */}
             <header className="content-panel__header">
               <h1 className="content-panel__title">
                 {sectionTitles[displaySection]}
@@ -238,12 +256,10 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
               <div className="content-panel__title-bar" />
             </header>
 
-            {/* ── Content area (placeholder — real content in phases 6-8) ── */}
             <main className="content-panel__content">
               <SectionPlaceholder section={displaySection} />
             </main>
 
-            {/* ── Footer ── */}
             <footer className="content-panel__footer">
               <span className="content-panel__footer-text">
                 Le Dev Novice © {new Date().getFullYear()}
@@ -256,7 +272,7 @@ const ContentPanel: React.FC<ContentPanelProps> = ({
   );
 };
 
-// ─── Placeholder content (temporary) ────────────────────
+// ─── Placeholder (temporary until phases 6-8) ───────────
 
 const SectionPlaceholder: React.FC<{ section: SectionId }> = ({ section }) => {
   const messages: Record<SectionId, { title: string; description: string }> = {

@@ -14,6 +14,7 @@ export type DotAnimationState =
     | 'wiggle2'
     | 'secondPause'
     | 'expand'
+    | 'expanded'
     | 'contract';
 
 export interface DotVariants extends Variants {
@@ -25,6 +26,7 @@ export interface DotVariants extends Variants {
     wiggle2: Variant;
     secondPause: Variant;
     expand: Variant;
+    expanded: Variant;
     contract: Variant;
 }
 

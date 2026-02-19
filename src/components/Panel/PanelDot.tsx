@@ -11,10 +11,8 @@ const PanelDot: React.FC<PanelDotProps> = ({ onClick }) => {
   return (
     <div
       className="panel-dot__wrapper"
-      // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
-      onMouseEnter={() => setIsHovered(true)}
-      // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => { setIsHovered(true); }}
+      onMouseLeave={() => { setIsHovered(false); }}
     >
       <motion.button
         className="panel-dot"
@@ -22,7 +20,7 @@ const PanelDot: React.FC<PanelDotProps> = ({ onClick }) => {
         type="button"
         aria-label="Retour au menu"
 
-        /* ── Pulse at rest ── */
+        /* ── Pulse at rest, wiggle on hover ── */
         animate={
           isHovered
             ? { x: [0, 2, -2, 2, -2, 0], scale: 1 }
@@ -30,8 +28,8 @@ const PanelDot: React.FC<PanelDotProps> = ({ onClick }) => {
         }
         transition={
           isHovered
-            ? { duration: 0.3, ease: 'easeInOut' }
-            : { duration: 3, repeat: Infinity, ease: 'easeInOut' }
+            ? { duration: 0.3, ease: 'easeInOut' as const }
+            : { duration: 3, repeat: Infinity, ease: 'easeInOut' as const }
         }
 
         whileTap={{ scale: 0.85 }}

@@ -26,7 +26,6 @@ interface IntroOverlayState {
   isTouchDevice: boolean;
   menuOpen: boolean;
   hasCompletedFirstOpen: boolean;
-  // Panel
   activeSection: SectionId | null;
   panelVisible: boolean;
 }
@@ -108,19 +107,27 @@ const introOverlayReducer = (
     // ── Panel transitions ──
 
     case 'NAVIGATE_TO_SECTION':
+      // Menu hides, panel takes over. Dot goes to idle (tiny, hidden
+      // behind the panel which starts at 100vw×100vh violet).
       return {
         ...state,
         menuOpen: false,
         activeSection: action.section,
         panelVisible: true,
+        dotAnimationState: 'idle',
       };
 
     case 'PANEL_CLOSED':
+      // Panel has morphed back to fullscreen violet and is about to
+      // unmount. Dot jumps INSTANTLY to scale 300 ('expanded') so the
+      // violet backdrop is seamless when the menu fades in on top.
+      // React 18 batches these updates → no flash.
       return {
         ...state,
         panelVisible: false,
         activeSection: null,
         menuOpen: true,
+        dotAnimationState: 'expanded',
       };
 
     default:
@@ -191,6 +198,15 @@ const dotVariants: DotVariants = {
       duration: 2,
       ease: [0.4, 0, 0.2, 1],
       times: [0, 0.5, 1],
+    },
+  },
+  // Instant snap to fullscreen — used when returning from panel to menu
+  // so the violet backdrop is already in place when the menu fades in.
+  expanded: {
+    scale: 300,
+    opacity: 1,
+    transition: {
+      duration: 0,
     },
   },
   contract: {
@@ -264,10 +280,9 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
     previousState: DotAnimationState
   ) => {
     const transitions: Partial<Record<DotAnimationState, () => void>> = {
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
-      fadeIn: () => { },
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
-      idle: () => { },
+      fadeIn: () => { /* waiting for user */ },
+      idle: () => { /* stable */ },
+      expanded: () => { /* stable — backdrop for menu */ },
       wiggle1: () => {
         dispatch({ type: 'TRANSITION_TO', nextState: 'pause' });
       },
@@ -306,6 +321,7 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
   const isInteractive = !state.menuOpen
     && !state.panelVisible
     && state.dotAnimationState !== 'expand'
+    && state.dotAnimationState !== 'expanded'
     && state.dotAnimationState !== 'contract'
     && state.dotAnimationState !== 'wiggle1'
     && state.dotAnimationState !== 'wiggle2'

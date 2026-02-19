@@ -13,7 +13,7 @@
   overflow: hidden;
   box-sizing: border-box;
 
-  /* Default state: violet */
+  /* Default: violet */
   background-color: #792262;
   transition: background-color 0.5s ease-out;
 }
@@ -85,7 +85,6 @@
   overflow-y: auto;
   min-height: 0;
 
-  /* Scrollbar */
   scrollbar-width: thin;
   scrollbar-color: #792262 transparent;
 }
@@ -201,8 +200,6 @@
   border-radius: 50%;
 }
 
-/* ── Tooltip ── */
-
 .panel-dot__tooltip {
   position: absolute;
   left: calc(100% + 12px);
@@ -219,7 +216,6 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s ease 0.5s;
-  /* 500ms delay before appearing */
 }
 
 .panel-dot__tooltip--visible {
@@ -263,7 +259,6 @@
     font-size: 0.75rem;
   }
 
-  /* Tooltip goes below on mobile */
   .panel-dot__tooltip {
     left: 50%;
     top: calc(100% + 8px);
