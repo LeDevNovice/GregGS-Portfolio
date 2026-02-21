@@ -1,20 +1,59 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from '@tanstack/react-router';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faGithub,
+  faLinkedin,
+  faTwitter,
+} from '@fortawesome/free-brands-svg-icons';
+import type { IconDefinition } from '@fortawesome/free-brands-svg-icons';
 
-import { OverlayMenuProps } from '../../types';
+import { OverlayMenuProps, SectionId } from '../../types';
+
 import '../../styles/Overlay.css';
+
+// ─── Data ───────────────────────────────────────────────
 
 interface MenuItem {
   label: string;
-  path: '/about' | '/publications' | '/projects';
+  section: SectionId;
+}
+
+interface SocialLink {
+  name: string;
+  icon: IconDefinition;
+  url: string;
+  ariaLabel: string;
 }
 
 const menuItems: MenuItem[] = [
-  { label: 'About', path: '/about' },
-  { label: 'Publications', path: '/publications' },
-  { label: 'Projects', path: '/projects' },
+  { label: 'À Propos', section: 'about' },
+  { label: 'Publications', section: 'publications' },
+  { label: 'Projets', section: 'projects' },
 ];
+
+const socialLinks: SocialLink[] = [
+  {
+    name: 'GitHub',
+    icon: faGithub,
+    url: 'https://github.com/LeDevNovice',
+    ariaLabel: 'Visitez mon profil GitHub',
+  },
+  {
+    name: 'LinkedIn',
+    icon: faLinkedin,
+    url: 'https://linkedin.com/in/gregory-saison',
+    ariaLabel: 'Visitez mon profil LinkedIn',
+  },
+  {
+    name: 'Twitter',
+    icon: faTwitter,
+    url: 'https://x.com/ledevnovice',
+    ariaLabel: 'Visitez mon profil Twitter',
+  },
+];
+
+// ─── Variants ───────────────────────────────────────────
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -56,16 +95,42 @@ const itemVariants = {
   },
 } as const;
 
-const OverlayMenu: React.FC<OverlayMenuProps> = ({ onClose, isVisible }) => {
-  const navigate = useNavigate();
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
+const bottomVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      duration: 0.5,
+      ease: 'easeOut',
+      delay: 0.6,
+    },
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      duration: 0.15,
+    },
+  },
+} as const;
 
+// ─── Component ──────────────────────────────────────────
+
+const OverlayMenu: React.FC<OverlayMenuProps> = ({
+  onClose,
+  onNavigate,
+  isVisible,
+}) => {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const currentYear = new Date().getFullYear();
+
+  // Focus the close button when the menu opens
   useEffect(() => {
     if (isVisible && closeButtonRef.current) {
       closeButtonRef.current.focus();
     }
   }, [isVisible]);
 
+  // Close on Escape key
   useEffect(() => {
     if (!isVisible) return;
 
@@ -77,12 +142,18 @@ const OverlayMenu: React.FC<OverlayMenuProps> = ({ onClose, isVisible }) => {
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression, @typescript-eslint/explicit-function-return-type
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    return () => { window.removeEventListener('keydown', handleKeyDown); };
   }, [isVisible, onClose]);
 
-  const handleNavigate = (path: MenuItem['path']): void => {
-    void navigate({ to: path });
+  const handleItemClick = (e: React.MouseEvent, section: SectionId): void => {
+    e.stopPropagation();
+    onNavigate(section);
+  };
+
+  const handleCloseClick = (e: React.MouseEvent): void => {
+    e.stopPropagation();
+    onClose();
   };
 
   return (
@@ -98,13 +169,11 @@ const OverlayMenu: React.FC<OverlayMenuProps> = ({ onClose, isVisible }) => {
           aria-modal="true"
           aria-label="Menu de navigation"
         >
+          {/* ── Close button ── */}
           <motion.button
             ref={closeButtonRef}
             className="overlay__menu-close"
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose();
-            }}
+            onClick={handleCloseClick}
             variants={itemVariants}
             aria-label="Fermer le menu"
             type="button"
@@ -112,6 +181,7 @@ const OverlayMenu: React.FC<OverlayMenuProps> = ({ onClose, isVisible }) => {
             ✕
           </motion.button>
 
+          {/* ── Navigation items ── */}
           <nav
             className="overlay__menu-nav"
             role="navigation"
@@ -119,12 +189,9 @@ const OverlayMenu: React.FC<OverlayMenuProps> = ({ onClose, isVisible }) => {
           >
             {menuItems.map((item) => (
               <motion.button
-                key={item.path}
+                key={item.section}
                 className="overlay__menu-item"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleNavigate(item.path);
-                }}
+                onClick={(e: React.MouseEvent) => { handleItemClick(e, item.section); }}
                 variants={itemVariants}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.97 }}
@@ -135,6 +202,36 @@ const OverlayMenu: React.FC<OverlayMenuProps> = ({ onClose, isVisible }) => {
               </motion.button>
             ))}
           </nav>
+
+          {/* ── Bottom section: socials + footer ── */}
+          <motion.div
+            className="overlay__menu-bottom"
+            variants={bottomVariants}
+          >
+            <div
+              className="overlay__menu-socials"
+              role="navigation"
+              aria-label="Réseaux sociaux"
+            >
+              {socialLinks.map((social) => (
+                <a
+                  key={social.name}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="overlay__menu-social-link"
+                  aria-label={social.ariaLabel}
+                  title={social.name}
+                >
+                  <FontAwesomeIcon icon={social.icon} />
+                </a>
+              ))}
+            </div>
+
+            <span className="overlay__menu-footer">
+              Le Dev Novice © {currentYear}
+            </span>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
