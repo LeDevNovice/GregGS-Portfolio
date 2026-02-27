@@ -1,10 +1,12 @@
 import * as THREE from 'three';
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import type { Mesh } from 'three';
-import type { LivingDotProps } from './types';
-import type { DotAnimationState } from '../types';
 
+import type { LivingDotProps } from './types';
+import { SoftBody } from './physics/SoftBody';
+import { SoftBodyMesh } from './SoftBodyMesh';
+import { vec2 } from './physics/Vec2';
 
 const FADE_IN_DURATION = 5.0;
 const FADE_IN_DELAY = 0.5;
@@ -12,27 +14,25 @@ const WIGGLE_DURATION = 0.3;
 const EXPAND_DURATION = 2.0;
 const CONTRACT_DURATION = 1.5;
 
-const WIGGLE_AMPLITUDE = 5;
-
-function getFullscreenRadius(): number {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  return Math.sqrt(w * w + h * h) / 2 + 10;
-}
+const BREATHING_FACTOR = 0.04;
+const WIGGLE_IMPULSE_FACTOR = 0.55;
+const EXPAND_BURST_FACTOR = 0.9;
+const CONTRACT_SQUEEZE_FACTOR = 0.3;
 
 function cubicBezier(t: number, x1: number, y1: number, x2: number, y2: number): number {
-  function sampleX(t: number): number {
-    return 3 * t * (1 - t) * (1 - t) * x1 + 3 * t * t * (1 - t) * x2 + t * t * t;
+  function sampleX(u: number): number {
+    return 3 * u * (1 - u) * (1 - u) * x1 + 3 * u * u * (1 - u) * x2 + u * u * u;
   }
-  function sampleY(t: number): number {
-    return 3 * t * (1 - t) * (1 - t) * y1 + 3 * t * t * (1 - t) * y2 + t * t * t;
+  function sampleY(u: number): number {
+    return 3 * u * (1 - u) * (1 - u) * y1 + 3 * u * u * (1 - u) * y2 + u * u * u;
   }
-  let start = 0; let end = 1;
+  let lo = 0;
+  let hi = 1;
   for (let i = 0; i < 8; i++) {
-    const mid = (start + end) / 2;
-    if (sampleX(mid) < t) start = mid; else end = mid;
+    const mid = (lo + hi) / 2;
+    if (sampleX(mid) < t) { lo = mid; } else { hi = mid; }
   }
-  return sampleY((start + end) / 2);
+  return sampleY((lo + hi) / 2);
 }
 
 function easeStandard(t: number): number {
@@ -44,53 +44,111 @@ function easeInOut(t: number): number {
   return c < 0.5 ? 2 * c * c : 1 - Math.pow(-2 * c + 2, 2) / 2;
 }
 
+function getFullscreenRadius(): number {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  return Math.sqrt(w * w + h * h) / 2 + 20;
+}
+
 export const LivingDot: React.FC<LivingDotProps> = ({
   dotState,
   dotWorldPos,
   baseRadius,
   onAnimationComplete,
 }) => {
-  const meshRef = useRef<Mesh>(null!);
+  const meshRef = useRef<Mesh | null>(null);
+
+  const softBody = useMemo(
+    () => new SoftBody(vec2(dotWorldPos[0], dotWorldPos[1]), Math.max(baseRadius, 1)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+  const sbMesh = useMemo(() => new SoftBodyMesh(), []);
 
   const timerRef = useRef(0);
-  const prevStateRef = useRef<DotAnimationState>('fadeIn');
   const completedRef = useRef(false);
-  const radiusRef = useRef(0);
   const alphaRef = useRef(0);
-  const offsetXRef = useRef(0);
+  const globalTimeRef = useRef(0);
+  const wiggleImpulseApplied = useRef(false);
+  const expandBurstApplied = useRef(false);
+  const contractSqueezeApplied = useRef(false);
 
   const onCompleteRef = useRef(onAnimationComplete);
-  useEffect(() => { onCompleteRef.current = onAnimationComplete; }, [onAnimationComplete]);
+  useEffect(() => {
+    onCompleteRef.current = onAnimationComplete;
+  }, [onAnimationComplete]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     timerRef.current = 0;
     completedRef.current = false;
+    wiggleImpulseApplied.current = false;
+    expandBurstApplied.current = false;
+    contractSqueezeApplied.current = false;
+
     if (dotState === 'expanded') {
-      radiusRef.current = getFullscreenRadius();
+      const r = getFullscreenRadius();
+      softBody.targetRadius = r;
+      softBody.teleport(vec2(dotWorldPos[0], dotWorldPos[1]), r);
       alphaRef.current = 1;
-      offsetXRef.current = 0;
     }
   }, [dotState]);
+  const prevWorldPos = useRef<readonly [number, number]>([0, 0]);
+  useEffect(() => {
+    const [px, py] = prevWorldPos.current;
+    const [nx, ny] = dotWorldPos;
+    if (Math.abs(nx - px) > 0.5 || Math.abs(ny - py) > 0.5) {
+      prevWorldPos.current = dotWorldPos;
+      if (
+        dotState === 'idle' ||
+        dotState === 'fadeIn' ||
+        dotState === 'pause' ||
+        dotState === 'secondPause'
+      ) {
+        softBody.teleport(vec2(nx, ny));
+      } else {
+        softBody.teleport(vec2(nx, ny), softBody.targetRadius);
+      }
+    }
+  }, [dotWorldPos, dotState, softBody]);
 
-  useFrame((_, delta) => {
+  const prevBaseRadius = useRef(baseRadius);
+  useEffect(() => {
+    if (Math.abs(baseRadius - prevBaseRadius.current) > 0.5 && baseRadius > 0) {
+      prevBaseRadius.current = baseRadius;
+      softBody.baseRadius = baseRadius;
+      if (dotState === 'idle' || dotState === 'fadeIn') {
+        softBody.targetRadius = baseRadius;
+        softBody.teleport(vec2(dotWorldPos[0], dotWorldPos[1]), baseRadius);
+      }
+    }
+  }, [baseRadius, dotState, dotWorldPos, softBody]);
+
+  useEffect(() => {
+    return (): void => {
+      sbMesh.dispose();
+    };
+  }, [sbMesh]);
+
+  useFrame((_, delta): void => {
     const mesh = meshRef.current;
-    if (!mesh) return;
+    if (mesh === null || baseRadius <= 0) return;
 
     timerRef.current += delta;
+    globalTimeRef.current += delta;
     const t = timerRef.current;
+    const gt = globalTimeRef.current;
 
-    let targetRadius = radiusRef.current;
-    let targetAlpha = alphaRef.current;
-    let targetOffsetX = 0;
+    const breatheMag = softBody.baseRadius * BREATHING_FACTOR;
 
     switch (dotState) {
 
       case 'fadeIn': {
         const elapsed = Math.max(0, t - FADE_IN_DELAY);
         const progress = Math.min(1, elapsed / FADE_IN_DURATION);
-        targetAlpha = easeInOut(progress);
-        targetRadius = baseRadius;
-        targetOffsetX = 0;
+        alphaRef.current = easeInOut(progress);
+        softBody.targetRadius = softBody.baseRadius;
+        softBody.addBreathingForce(gt, breatheMag * Math.min(1, progress * 3));
         if (!completedRef.current && progress >= 1) {
           completedRef.current = true;
           onCompleteRef.current('fadeIn');
@@ -99,9 +157,9 @@ export const LivingDot: React.FC<LivingDotProps> = ({
       }
 
       case 'idle': {
-        targetAlpha = 1;
-        targetRadius = baseRadius;
-        targetOffsetX = 0;
+        alphaRef.current = 1;
+        softBody.targetRadius = softBody.baseRadius;
+        softBody.addBreathingForce(gt, breatheMag);
         if (!completedRef.current) {
           completedRef.current = true;
           onCompleteRef.current('idle');
@@ -111,9 +169,9 @@ export const LivingDot: React.FC<LivingDotProps> = ({
 
       case 'pause':
       case 'secondPause': {
-        targetAlpha = 1;
-        targetRadius = baseRadius;
-        targetOffsetX = 0;
+        alphaRef.current = 1;
+        softBody.targetRadius = softBody.baseRadius;
+        softBody.addBreathingForce(gt, breatheMag * 0.5);
         if (!completedRef.current && t >= 0.1) {
           completedRef.current = true;
           onCompleteRef.current(dotState);
@@ -123,10 +181,16 @@ export const LivingDot: React.FC<LivingDotProps> = ({
 
       case 'wiggle1':
       case 'wiggle2': {
+        alphaRef.current = 1;
+        softBody.targetRadius = softBody.baseRadius;
+        if (!wiggleImpulseApplied.current) {
+          wiggleImpulseApplied.current = true;
+          const dir = dotState === 'wiggle1' ? 1 : -1;
+          const impulse = softBody.baseRadius * WIGGLE_IMPULSE_FACTOR;
+          softBody.addLateralImpulse(impulse * dir, 0);
+          softBody.addRadialImpulse(-softBody.baseRadius * 0.2);
+        }
         const progress = Math.min(1, t / WIGGLE_DURATION);
-        targetOffsetX = Math.sin(progress * Math.PI * 5) * WIGGLE_AMPLITUDE;
-        targetAlpha = 1;
-        targetRadius = baseRadius;
         if (!completedRef.current && progress >= 1) {
           completedRef.current = true;
           onCompleteRef.current(dotState);
@@ -135,11 +199,15 @@ export const LivingDot: React.FC<LivingDotProps> = ({
       }
 
       case 'expand': {
+        alphaRef.current = 1;
         const progress = Math.min(1, t / EXPAND_DURATION);
-        const easedProgress = easeStandard(progress);
-        targetRadius = baseRadius + (getFullscreenRadius() - baseRadius) * easedProgress;
-        targetAlpha = 1;
-        targetOffsetX = 0;
+        softBody.targetRadius =
+          softBody.baseRadius +
+          (getFullscreenRadius() - softBody.baseRadius) * easeStandard(progress);
+        if (!expandBurstApplied.current && t < 0.05) {
+          expandBurstApplied.current = true;
+          softBody.addRadialImpulse(softBody.baseRadius * EXPAND_BURST_FACTOR);
+        }
         if (!completedRef.current && progress >= 1) {
           completedRef.current = true;
           onCompleteRef.current('expand');
@@ -148,19 +216,20 @@ export const LivingDot: React.FC<LivingDotProps> = ({
       }
 
       case 'expanded': {
-        targetRadius = getFullscreenRadius();
-        targetAlpha = 1;
-        targetOffsetX = 0;
+        alphaRef.current = 1;
+        softBody.targetRadius = getFullscreenRadius();
         break;
       }
 
       case 'contract': {
+        alphaRef.current = 1;
         const progress = Math.min(1, t / CONTRACT_DURATION);
-        const easedProgress = easeStandard(progress);
         const fullR = getFullscreenRadius();
-        targetRadius = fullR + (baseRadius - fullR) * easedProgress;
-        targetAlpha = 1;
-        targetOffsetX = 0;
+        softBody.targetRadius = fullR + (softBody.baseRadius - fullR) * easeStandard(progress);
+        if (!contractSqueezeApplied.current && t < 0.05) {
+          contractSqueezeApplied.current = true;
+          softBody.addRadialImpulse(-softBody.baseRadius * CONTRACT_SQUEEZE_FACTOR);
+        }
         if (!completedRef.current && progress >= 1) {
           completedRef.current = true;
           onCompleteRef.current('contract');
@@ -169,25 +238,23 @@ export const LivingDot: React.FC<LivingDotProps> = ({
       }
     }
 
-    mesh.position.set(dotWorldPos[0] + targetOffsetX, dotWorldPos[1], 0);
-    const scale = baseRadius > 0 ? targetRadius / baseRadius : 1;
-    mesh.scale.setScalar(scale);
+    softBody.step(delta);
+
+    const positions = softBody.positions();
+    const center = softBody.center;
+    sbMesh.update(positions, center.x, center.y);
 
     const mat = mesh.material as THREE.MeshBasicMaterial;
-    mat.opacity = targetAlpha;
-
-    radiusRef.current = targetRadius;
-    alphaRef.current = targetAlpha;
-    offsetXRef.current = targetOffsetX;
+    mat.opacity = alphaRef.current;
   });
 
   return (
-    <mesh ref={meshRef} position={[dotWorldPos[0], dotWorldPos[1], 0]}>
-      <circleGeometry args={[1, 64]} />
+    <mesh ref={meshRef} geometry={sbMesh.geometry} position={[0, 0, 0]}>
       <meshBasicMaterial
         color="#792262"
         transparent
         opacity={0}
+        side={THREE.DoubleSide}
         depthWrite={false}
       />
     </mesh>

@@ -1,7 +1,7 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { RefObject } from 'react';
 
-interface DotPosition {
+export interface DotPosition {
   worldPos: readonly [number, number];
   baseRadius: number;
 }
@@ -9,7 +9,6 @@ interface DotPosition {
 function rectToWorld(rect: DOMRect): DotPosition {
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
-
   return {
     worldPos: [
       cx - window.innerWidth / 2,
@@ -20,9 +19,9 @@ function rectToWorld(rect: DOMRect): DotPosition {
 }
 
 export function useDotPosition(
-  placeholderRef: RefObject<HTMLSpanElement | null>
+  placeholderRef: RefObject<HTMLSpanElement | null>,
 ): DotPosition {
-  const positionRef = useRef<DotPosition>({
+  const [position, setPosition] = useState<DotPosition>({
     worldPos: [0, 0],
     baseRadius: 0,
   });
@@ -30,7 +29,14 @@ export function useDotPosition(
   const update = useCallback((): void => {
     const el = placeholderRef.current;
     if (!el) return;
-    positionRef.current = rectToWorld(el.getBoundingClientRect());
+    const next = rectToWorld(el.getBoundingClientRect());
+    setPosition(prev => {
+      const dx = Math.abs(next.worldPos[0] - prev.worldPos[0]);
+      const dy = Math.abs(next.worldPos[1] - prev.worldPos[1]);
+      const dr = Math.abs(next.baseRadius - prev.baseRadius);
+      if (dx < 0.5 && dy < 0.5 && dr < 0.5) return prev;
+      return next;
+    });
   }, [placeholderRef]);
 
   useEffect(() => {
@@ -49,5 +55,5 @@ export function useDotPosition(
     };
   }, [update, placeholderRef]);
 
-  return positionRef.current;
+  return position;
 }
