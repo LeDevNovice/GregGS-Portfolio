@@ -1,14 +1,28 @@
+// src/r3f/SoftBodyMesh.ts
+
 import * as THREE from 'three';
 import type { Vec2 } from './physics/Vec2';
 import { NUM_PARTICLES } from './physics/SoftBody';
 
 const SUBDIVISIONS = 6;
-const CURVE_POINTS = NUM_PARTICLES * SUBDIVISIONS;
-const TOTAL_VERTICES = CURVE_POINTS + 1;
-const TOTAL_INDICES = CURVE_POINTS * 3;
+const CURVE_POINTS = NUM_PARTICLES * SUBDIVISIONS; // 72
+const TOTAL_VERTICES = CURVE_POINTS + 1;           // 73 (vertex 0 = centre)
+const TOTAL_INDICES = CURVE_POINTS * 3;            // 216
 
+// Objet temporaire réutilisé par catmullRom — zéro allocation dans la boucle.
 const _tmp = { x: 0, y: 0 };
 
+// Helper qui satisfait TypeScript strict (Array[i] = T | undefined).
+// En pratique ne retourne jamais le fallback car particles.length = NUM_PARTICLES.
+function safeParticle(particles: Vec2[], idx: number): Vec2 {
+  const p = particles[idx];
+  return p !== undefined ? p : { x: 0, y: 0 };
+}
+
+/**
+ * Spline Catmull-Rom entre P1 et P2.
+ * Écrit dans `out` pour éviter toute allocation dans la boucle.
+ */
 function catmullRom(
   p0: Vec2, p1: Vec2, p2: Vec2, p3: Vec2,
   t: number,
@@ -42,6 +56,7 @@ export class SoftBodyMesh {
     this.posAttr.setUsage(THREE.DynamicDrawUsage);
     this.geometry.setAttribute('position', this.posAttr);
 
+    // Fan triangulation : [centre, point_i, point_(i+1 % N)]
     const indices = new Uint16Array(TOTAL_INDICES);
     for (let i = 0; i < CURVE_POINTS; i++) {
       indices[i * 3 + 0] = 0;
@@ -55,18 +70,20 @@ export class SoftBodyMesh {
     const pos = this.posAttr.array as Float32Array;
     const n = NUM_PARTICLES;
 
+    // Vertex 0 : centre
     pos[0] = centerX;
     pos[1] = centerY;
     pos[2] = 0;
 
+    // Vertices 1..72 : périmètre Catmull-Rom
     for (let i = 0; i < n; i++) {
-      const p0 = particles[(i - 1 + n) % n];
-      const p1 = particles[i];
-      const p2 = particles[(i + 1) % n];
-      const p3 = particles[(i + 2) % n];
+      const p0 = safeParticle(particles, (i - 1 + n) % n);
+      const p1 = safeParticle(particles, i);
+      const p2 = safeParticle(particles, (i + 1) % n);
+      const p3 = safeParticle(particles, (i + 2) % n);
 
       for (let s = 0; s < SUBDIVISIONS; s++) {
-        const t = s / SUBDIVISIONS;
+        const t = s / SUBDIVISIONS; // t ∈ [0, 1)
         catmullRom(p0, p1, p2, p3, t, _tmp);
 
         const vi = i * SUBDIVISIONS + s + 1;
