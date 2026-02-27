@@ -1,21 +1,19 @@
-import { useEffect, useCallback, useReducer } from 'react';
+import { useEffect, useCallback, useReducer, useRef } from 'react';
 import React from 'react';
 
 import IntroTitle from './IntroTitle';
-import IntroDot from './IntroDot';
 import IntroEnterMessage from './IntroEnterMessage';
 import OverlayMenu from './OverlayMenu';
 import ContentPanel from '../Panel/ContentPanel';
+import { DotCanvas } from '../../r3f/DotCanvas';
+
 import {
   IntroOverlayProps,
   DotAnimationState,
-  DotVariants,
   SectionId,
 } from '../../types';
 
 import '../../styles/Overlay.css';
-
-// ─── State ──────────────────────────────────────────────
 
 interface IntroOverlayState {
   dotAnimationState: DotAnimationState;
@@ -30,8 +28,6 @@ interface IntroOverlayState {
   panelVisible: boolean;
 }
 
-// ─── Actions ────────────────────────────────────────────
-
 type IntroOverlayAction =
   | { type: 'INIT_TOUCH_DEVICE'; isTouchDevice: boolean }
   | { type: 'SHOW_ENTER_MESSAGE' }
@@ -44,11 +40,9 @@ type IntroOverlayAction =
   | { type: 'NAVIGATE_TO_SECTION'; section: SectionId }
   | { type: 'PANEL_CLOSED' };
 
-// ─── Reducer ────────────────────────────────────────────
-
 const introOverlayReducer = (
   state: IntroOverlayState,
-  action: IntroOverlayAction
+  action: IntroOverlayAction,
 ): IntroOverlayState => {
   switch (action.type) {
     case 'INIT_TOUCH_DEVICE':
@@ -104,11 +98,7 @@ const introOverlayReducer = (
         hasStartedWiggle: false,
       };
 
-    // ── Panel transitions ──
-
     case 'NAVIGATE_TO_SECTION':
-      // Menu hides, panel takes over. Dot goes to idle (tiny, hidden
-      // behind the panel which starts at 100vw×100vh violet).
       return {
         ...state,
         menuOpen: false,
@@ -118,10 +108,6 @@ const introOverlayReducer = (
       };
 
     case 'PANEL_CLOSED':
-      // Panel has morphed back to fullscreen violet and is about to
-      // unmount. Dot jumps INSTANTLY to scale 300 ('expanded') so the
-      // violet backdrop is seamless when the menu fades in on top.
-      // React 18 batches these updates → no flash.
       return {
         ...state,
         panelVisible: false,
@@ -134,92 +120,6 @@ const introOverlayReducer = (
       return state;
   }
 };
-
-// ─── Dot Variants ───────────────────────────────────────
-
-const dotVariants: DotVariants = {
-  hidden: {
-    scale: 1,
-    x: 0,
-    opacity: 0,
-  },
-  fadeIn: {
-    opacity: 1,
-    transition: {
-      duration: 5,
-      ease: 'easeInOut',
-      delay: 0.5,
-    },
-  },
-  idle: {
-    scale: 1,
-    x: 0,
-    opacity: 1,
-    transition: {
-      duration: 0.01,
-    },
-  },
-  wiggle1: {
-    x: [0, 5, -5, 5, -5, 0],
-    opacity: 1,
-    transition: {
-      duration: 0.3,
-      ease: 'easeInOut',
-    },
-  },
-  pause: {
-    x: 0,
-    opacity: 1,
-    transition: {
-      ease: 'linear',
-      duration: 0.1,
-    },
-  },
-  wiggle2: {
-    x: [0, 5, -5, 5, -5, 0],
-    opacity: 1,
-    transition: {
-      duration: 0.3,
-      ease: 'easeInOut',
-    },
-  },
-  secondPause: {
-    x: 0,
-    opacity: 1,
-    transition: {
-      ease: 'linear',
-      duration: 0.1,
-    },
-  },
-  expand: {
-    scale: [1, 50, 300],
-    opacity: 1,
-    transition: {
-      duration: 2,
-      ease: [0.4, 0, 0.2, 1],
-      times: [0, 0.5, 1],
-    },
-  },
-  // Instant snap to fullscreen — used when returning from panel to menu
-  // so the violet backdrop is already in place when the menu fades in.
-  expanded: {
-    scale: 300,
-    opacity: 1,
-    transition: {
-      duration: 0,
-    },
-  },
-  contract: {
-    scale: 1,
-    opacity: 1,
-    transition: {
-      duration: 1.5,
-      ease: [0.4, 0, 0.2, 1],
-    },
-  },
-} as const;
-
-// ─── Component ──────────────────────────────────────────
 
 const IntroOverlay: React.FC<IntroOverlayProps> = () => {
   const initialState: IntroOverlayState = {
@@ -237,52 +137,43 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
 
   const [state, dispatch] = useReducer(introOverlayReducer, initialState);
 
-  // ── Init ──
+  const dotPlaceholderRef = useRef<HTMLSpanElement | null>(null);
 
   useEffect(() => {
     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     dispatch({ type: 'INIT_TOUCH_DEVICE', isTouchDevice: isTouch });
   }, []);
 
-  const handleTitleAnimationComplete = useCallback(() => {
+  const handleTitleAnimationComplete = useCallback((): void => {
     dispatch({ type: 'SHOW_ENTER_MESSAGE' });
   }, []);
 
-  // ── User click on the overlay (Greg.GS screen) ──
-
-  const handleUserInteraction = useCallback(() => {
+  const handleUserInteraction = useCallback((): void => {
     if (state.menuOpen || state.panelVisible) return;
-
     if (!state.hasStartedWiggle) {
       dispatch({ type: 'START_WIGGLE_SEQUENCE' });
     }
   }, [state.menuOpen, state.panelVisible, state.hasStartedWiggle]);
 
-  // ── Menu handlers ──
-
-  const handleMenuClose = useCallback(() => {
+  const handleMenuClose = useCallback((): void => {
     dispatch({ type: 'START_CLOSE' });
   }, []);
 
-  const handleNavigateToSection = useCallback((section: SectionId) => {
+  const handleNavigateToSection = useCallback((section: SectionId): void => {
     dispatch({ type: 'NAVIGATE_TO_SECTION', section });
   }, []);
 
-  // ── Panel closed → back to menu ──
-
-  const handlePanelClosed = useCallback(() => {
+  const handlePanelClosed = useCallback((): void => {
     dispatch({ type: 'PANEL_CLOSED' });
   }, []);
 
-  // ── Animation state machine ──
-
   const handleDotAnimationComplete = useCallback((
-    previousState: DotAnimationState
-  ) => {
+    previousState: DotAnimationState,
+  ): void => {
     const transitions: Partial<Record<DotAnimationState, () => void>> = {
-      fadeIn: () => { /* waiting for user */ },
-      idle: () => { /* stable */ },
-      expanded: () => { /* stable — backdrop for menu */ },
+      fadeIn: () => { /* wait for user interaction */ },
+      idle: () => { /* stable state */ },
+      expanded: () => { /* stable violet background */ },
       wiggle1: () => {
         dispatch({ type: 'TRANSITION_TO', nextState: 'pause' });
       },
@@ -311,22 +202,21 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
     if (transition) transition();
   }, []);
 
-  // ── Render ──
-
-  const containerStyle = {
+  const containerStyle: React.CSSProperties = {
     backgroundColor: state.hasOverlayBackground ? '#FEFEFE' : 'transparent',
     transition: 'background-color 0.5s ease-out',
   };
 
-  const isInteractive = !state.menuOpen
-    && !state.panelVisible
-    && state.dotAnimationState !== 'expand'
-    && state.dotAnimationState !== 'expanded'
-    && state.dotAnimationState !== 'contract'
-    && state.dotAnimationState !== 'wiggle1'
-    && state.dotAnimationState !== 'wiggle2'
-    && state.dotAnimationState !== 'pause'
-    && state.dotAnimationState !== 'secondPause';
+  const isInteractive =
+    !state.menuOpen &&
+    !state.panelVisible &&
+    state.dotAnimationState !== 'expand' &&
+    state.dotAnimationState !== 'expanded' &&
+    state.dotAnimationState !== 'contract' &&
+    state.dotAnimationState !== 'wiggle1' &&
+    state.dotAnimationState !== 'wiggle2' &&
+    state.dotAnimationState !== 'pause' &&
+    state.dotAnimationState !== 'secondPause';
 
   return (
     <div
@@ -335,14 +225,13 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
       style={containerStyle}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => {
+      onKeyDown={(e): void => {
         if (isInteractive && (e.key === 'Enter' || e.key === ' ')) {
           handleUserInteraction();
         }
       }}
       aria-label="Cliquez pour ouvrir le menu"
     >
-      {/* ── Greg . GS ── */}
       <div className="overlay__title-wrapper">
         <IntroTitle
           text="Greg"
@@ -351,10 +240,11 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
           handleTitleAnimationComplete={handleTitleAnimationComplete}
         />
 
-        <IntroDot
-          variant={dotVariants}
-          animationState={state.dotAnimationState}
-          handleDotAnimationComplete={handleDotAnimationComplete}
+        <span
+          ref={dotPlaceholderRef}
+          className="overlay__title-dot--placeholder"
+          role="presentation"
+          aria-hidden="true"
         />
 
         <IntroTitle
@@ -365,21 +255,24 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
         />
       </div>
 
-      {/* ── Enter message ── */}
-      {state.showEnterMessage
-        && (state.dotAnimationState === 'fadeIn' || state.dotAnimationState === 'idle')
-        && (
+      <DotCanvas
+        dotState={state.dotAnimationState}
+        placeholderRef={dotPlaceholderRef}
+        onAnimationComplete={handleDotAnimationComplete}
+      />
+
+      {state.showEnterMessage &&
+        (state.dotAnimationState === 'fadeIn' ||
+          state.dotAnimationState === 'idle') && (
           <IntroEnterMessage isTouchDevice={state.isTouchDevice} />
         )}
 
-      {/* ── Fullscreen menu ── */}
       <OverlayMenu
         isVisible={state.menuOpen}
         onClose={handleMenuClose}
         onNavigate={handleNavigateToSection}
       />
 
-      {/* ── Content panel ── */}
       <ContentPanel
         isVisible={state.panelVisible}
         section={state.activeSection}
