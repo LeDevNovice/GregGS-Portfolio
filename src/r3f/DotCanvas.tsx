@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { LivingDot } from './LivingDot';
 import { useDotPosition } from './hooks/useDotPosition';
 import type { DotCanvasProps } from './types';
+import { PaintExplosion } from './PaintExplosion';
 
 const canvasStyle: React.CSSProperties = {
   position: 'fixed',
@@ -36,6 +37,11 @@ export const DotCanvas: React.FC<DotCanvasProps> = ({
         dotState={dotState}
         dotWorldPos={worldPos}
         baseRadius={baseRadius}
+        onAnimationComplete={onAnimationComplete}
+      />
+      <PaintExplosion
+        dotState={dotState}
+        dotWorldPos={worldPos}
         onAnimationComplete={onAnimationComplete}
       />
     </Canvas>
