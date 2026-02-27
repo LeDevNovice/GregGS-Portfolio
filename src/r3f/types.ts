@@ -3,6 +3,7 @@ import type { DotAnimationState } from '../types';
 
 export interface DotCanvasProps {
   dotState: DotAnimationState;
+  menuOpen: boolean;  
   placeholderRef: RefObject<HTMLSpanElement | null>;
   onAnimationComplete: (completedState: DotAnimationState) => void;
 }

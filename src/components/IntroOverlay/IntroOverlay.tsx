@@ -257,6 +257,7 @@ const IntroOverlay: React.FC<IntroOverlayProps> = () => {
 
       <DotCanvas
         dotState={state.dotAnimationState}
+        menuOpen={state.menuOpen}
         placeholderRef={dotPlaceholderRef}
         onAnimationComplete={handleDotAnimationComplete}
       />

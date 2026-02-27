@@ -4,6 +4,7 @@ import { LivingDot } from './LivingDot';
 import { useDotPosition } from './hooks/useDotPosition';
 import type { DotCanvasProps } from './types';
 import { PaintExplosion } from './PaintExplosion';
+import { PaintDrips } from './PaintDrips';
 
 const canvasStyle: React.CSSProperties = {
   position: 'fixed',
@@ -16,6 +17,7 @@ const canvasStyle: React.CSSProperties = {
 
 export const DotCanvas: React.FC<DotCanvasProps> = ({
   dotState,
+  menuOpen,
   placeholderRef,
   onAnimationComplete,
 }) => {
@@ -44,6 +46,7 @@ export const DotCanvas: React.FC<DotCanvasProps> = ({
         dotWorldPos={worldPos}
         onAnimationComplete={onAnimationComplete}
       />
+      <PaintDrips isActive={menuOpen} />
     </Canvas>
   );
 };
