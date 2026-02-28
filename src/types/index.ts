@@ -9,7 +9,9 @@ export type DotAnimationState =
   | 'secondPause'
   | 'expand'
   | 'expanded'
-  | 'contract';
+  | 'contract'
+  | 'diving'
+  | 'surfacing';
 
 export interface IntroOverlayProps {}
 

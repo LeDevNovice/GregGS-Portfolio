@@ -1,5 +1,5 @@
-import { motion } from "framer-motion";
-
+import React from 'react';
+import { motion } from 'framer-motion';
 import { IntroTitleProps } from '../../types';
 import '../../styles/Overlay.css';
 
@@ -32,7 +32,17 @@ const IntroTitle: React.FC<IntroTitleProps> = ({
       aria-level={1}
       aria-label={`Partie du nom: ${text}`}
     >
-      {text}
+      {/* On split lettre par lettre pour pouvoir cibler le "e" via querySelector */}
+      {text.split('').map((letter, index) => (
+        <span
+          key={index}
+          data-letter-text={letter}
+          aria-hidden="true"
+          style={{ display: 'inline' }}
+        >
+          {letter}
+        </span>
+      ))}
     </motion.h1>
   );
 };

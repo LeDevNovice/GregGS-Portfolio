@@ -1,10 +1,10 @@
 import React from 'react';
 import { Canvas } from '@react-three/fiber';
 import { LivingDot } from './LivingDot';
+import { PaintExplosion } from './PaintExplosion';
+import { DiveEffect } from './DiveEffect';
 import { useDotPosition } from './hooks/useDotPosition';
 import type { DotCanvasProps } from './types';
-import { PaintExplosion } from './PaintExplosion';
-import { PaintDrips } from './PaintDrips';
 
 const canvasStyle: React.CSSProperties = {
   position: 'fixed',
@@ -15,11 +15,18 @@ const canvasStyle: React.CSSProperties = {
   zIndex: 5,
 } as const;
 
-export const DotCanvas: React.FC<DotCanvasProps> = ({
+// ─── Props étendus ────────────────────────────────────────────────────
+interface DotCanvasPropsExtended extends DotCanvasProps {
+  // Position CSS pixel du trou du "e" dans le titre Greg.GS
+  // [x, y] où (0,0) est haut-gauche de la fenêtre
+  eHolePos: readonly [number, number];
+}
+
+export const DotCanvas: React.FC<DotCanvasPropsExtended> = ({
   dotState,
-  menuOpen,
   placeholderRef,
   onAnimationComplete,
+  eHolePos,
 }) => {
   const { worldPos, baseRadius } = useDotPosition(placeholderRef);
 
@@ -46,7 +53,12 @@ export const DotCanvas: React.FC<DotCanvasProps> = ({
         dotWorldPos={worldPos}
         onAnimationComplete={onAnimationComplete}
       />
-      <PaintDrips isActive={menuOpen} />
+      {/* ← NOUVEAU : l'effet de plongeon */}
+      <DiveEffect
+        dotState={dotState}
+        eHolePos={eHolePos}
+        onAnimationComplete={onAnimationComplete}
+      />
     </Canvas>
   );
 };

@@ -6,6 +6,7 @@ export interface DotCanvasProps {
   menuOpen: boolean;  
   placeholderRef: RefObject<HTMLSpanElement | null>;
   onAnimationComplete: (completedState: DotAnimationState) => void;
+  eHolePos: readonly [number, number];
 }
 
 export interface LivingDotProps {
