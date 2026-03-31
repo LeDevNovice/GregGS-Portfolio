@@ -1,26 +1,38 @@
-import { useEffect, useCallback, useReducer } from 'react';
+import { useEffect, useCallback, useReducer, useRef } from 'react';
 import React from 'react';
 
 import IntroTitle from './IntroTitle';
-import IntroDot from './IntroDot';
 import IntroEnterMessage from './IntroEnterMessage';
-import { 
-  IntroOverlayProps, 
-  DotAnimationState, 
-  DotVariants 
+import OverlayMenu from './OverlayMenu';
+import ContentPanel from '../Panel/ContentPanel';
+import AboutPage from '../About/AboutPage'; // ← NOUVEAU
+import { DotCanvas } from '../../r3f/DotCanvas';
+
+import {
+  IntroOverlayProps,
+  DotAnimationState,
+  SectionId,
 } from '../../types';
 
 import '../../styles/Overlay.css';
 
+// ─── State ────────────────────────────────────────────────────────────
+
 interface IntroOverlayState {
   dotAnimationState: DotAnimationState;
-  showTitle: boolean;
+  titlesVisible: boolean;
   showEnterMessage: boolean;
   hasStartedWiggle: boolean;
   hasOverlayBackground: boolean;
   isTouchDevice: boolean;
-  isFullyComplete: boolean;
+  menuOpen: boolean;
+  hasCompletedFirstOpen: boolean;
+  activeSection: SectionId | null;
+  panelVisible: boolean;
+  aboutVisible: boolean;      // ← NOUVEAU : page About montée
 }
+
+// ─── Actions ──────────────────────────────────────────────────────────
 
 type IntroOverlayAction =
   | { type: 'INIT_TOUCH_DEVICE'; isTouchDevice: boolean }
@@ -28,260 +40,341 @@ type IntroOverlayAction =
   | { type: 'START_WIGGLE_SEQUENCE' }
   | { type: 'TRANSITION_TO'; nextState: DotAnimationState }
   | { type: 'START_EXPANSION' }
-  | { type: 'START_CONTRACTION' }
-  | { type: 'HIDE_ELEMENTS' }
-  | { type: 'COMPLETE_ANIMATION' };
+  | { type: 'SHOW_MENU' }
+  | { type: 'START_CLOSE' }
+  | { type: 'RESET_TO_IDLE' }
+  | { type: 'NAVIGATE_TO_SECTION'; section: SectionId }
+  | { type: 'PANEL_CLOSED' }
+  | { type: 'DIVE_COMPLETE' }      // ← NOUVEAU : plongeon terminé → montrer About
+  | { type: 'START_SURFACE' }      // ← NOUVEAU : depuis About, déclenche la remontée
+  | { type: 'SURFACE_COMPLETE' };  // ← NOUVEAU : remontée terminée → retour au menu
+
+// ─── Reducer ──────────────────────────────────────────────────────────
 
 const introOverlayReducer = (
-  state: IntroOverlayState, 
-  action: IntroOverlayAction
+  state: IntroOverlayState,
+  action: IntroOverlayAction,
 ): IntroOverlayState => {
   switch (action.type) {
     case 'INIT_TOUCH_DEVICE':
       return { ...state, isTouchDevice: action.isTouchDevice };
-    
+
     case 'SHOW_ENTER_MESSAGE':
       return { ...state, showEnterMessage: true };
-    
+
     case 'START_WIGGLE_SEQUENCE':
       if (!state.hasStartedWiggle) {
         return {
           ...state,
           hasStartedWiggle: true,
-          dotAnimationState: 'wiggle1'
+          showEnterMessage: false,
+          dotAnimationState: 'wiggle1',
         };
       }
       return state;
-    
+
     case 'TRANSITION_TO':
       return { ...state, dotAnimationState: action.nextState };
-    
+
     case 'START_EXPANSION':
       return {
         ...state,
-        dotAnimationState: 'expand'
+        dotAnimationState: 'expand',
+        titlesVisible: false,
+        showEnterMessage: false,
       };
-    
-    case 'HIDE_ELEMENTS':
+
+    case 'SHOW_MENU':
       return {
         ...state,
-        showTitle: false,
-        hasOverlayBackground: true
+        menuOpen: true,
+        hasOverlayBackground: true,
+        hasCompletedFirstOpen: true,
       };
-    
-    case 'START_CONTRACTION':
+
+    case 'START_CLOSE':
       return {
         ...state,
+        menuOpen: false,
         dotAnimationState: 'contract',
-        hasOverlayBackground: false
       };
-    
-    case 'COMPLETE_ANIMATION':
+
+    case 'RESET_TO_IDLE':
       return {
         ...state,
-        isFullyComplete: true
+        dotAnimationState: 'idle',
+        titlesVisible: true,
+        showEnterMessage: true,
+        hasOverlayBackground: true,
+        hasStartedWiggle: false,
       };
-    
+
+    case 'NAVIGATE_TO_SECTION':
+      // ← MODIFIÉ : "about" déclenche le plongeon, les autres restent avec ContentPanel
+      if (action.section === 'about') {
+        return {
+          ...state,
+          menuOpen: false,
+          activeSection: action.section,
+          dotAnimationState: 'diving', // Lance DiveEffect
+        };
+      }
+      return {
+        ...state,
+        menuOpen: false,
+        activeSection: action.section,
+        panelVisible: true,
+        dotAnimationState: 'idle',
+      };
+
+    case 'PANEL_CLOSED':
+      return {
+        ...state,
+        panelVisible: false,
+        activeSection: null,
+        menuOpen: true,
+        dotAnimationState: 'expanded',
+      };
+
+    // ← NOUVEAU : le plongeon est terminé (iris plein blanc)
+    case 'DIVE_COMPLETE':
+      return {
+        ...state,
+        aboutVisible: true,
+        dotAnimationState: 'idle', // DiveEffect s'arrête, reste blanc derrière About
+      };
+
+    // ← NOUVEAU : l'utilisateur clique "Retour" dans la page About
+    case 'START_SURFACE':
+      return {
+        ...state,
+        aboutVisible: false,           // About commence à se démonter
+        dotAnimationState: 'surfacing', // Lance DiveEffect en reverse
+      };
+
+    // ← NOUVEAU : la remontée est terminée (iris refermée)
+    case 'SURFACE_COMPLETE':
+      return {
+        ...state,
+        activeSection: null,
+        menuOpen: true,               // Retour au menu ouvert
+        dotAnimationState: 'expanded', // On est dans le fond violet
+      };
+
     default:
       return state;
   }
 };
 
-const dotVariants: DotVariants = {
-  hidden: {
-    scale: 1,
-    x: 0,
-    opacity: 0,
-  },
-  fadeIn: {
-    opacity: 1,
-    transition: {
-      duration: 5,
-      ease: 'easeInOut',
-      delay: 0.5,
-    },
-  },
-  wiggle1: {
-    x: [0, 5, -5, 5, -5, 0],
-    opacity: 1,
-    transition: {
-      duration: 0.3,
-      ease: 'easeInOut',
-    },
-  },
-  pause: {
-    x: 0,
-    opacity: 1,
-    transition: {
-      ease: 'linear',
-      duration: 0.1,
-    },
-  },
-  wiggle2: {
-    x: [0, 5, -5, 5, -5, 0],
-    opacity: 1,
-    transition: {
-      duration: 0.3,
-      ease: 'easeInOut',
-    },
-  },
-  secondPause: {
-    x: 0,
-    opacity: 1,
-    transition: {
-      ease: 'linear',
-      duration: 0.1,
-    },
-  },
-  expand: {
-    scale: [1, 50, 300],
-    opacity: 1,
-    transition: {
-      duration: 2,
-      ease: [0.4, 0, 0.2, 1],
-      times: [0, 0.5, 1]
-    },
-  },
-  contract: {
-    scale: 0,
-    opacity: 1,
-    transition: {
-      duration: 2,
-      ease: 'easeOut',
-    },
-  },
-} as const;
+// ─── Component ────────────────────────────────────────────────────────
 
-const IntroOverlay: React.FC<IntroOverlayProps> = ({ onFinish }) => {
+const IntroOverlay: React.FC<IntroOverlayProps> = () => {
   const initialState: IntroOverlayState = {
     dotAnimationState: 'fadeIn',
-    showTitle: true,
+    titlesVisible: true,
     showEnterMessage: false,
     hasStartedWiggle: false,
     hasOverlayBackground: true,
     isTouchDevice: false,
-    isFullyComplete: false,
+    menuOpen: false,
+    hasCompletedFirstOpen: false,
+    activeSection: null,
+    panelVisible: false,
+    aboutVisible: false, // ← NOUVEAU
   };
 
   const [state, dispatch] = useReducer(introOverlayReducer, initialState);
+
+  const dotPlaceholderRef = useRef<HTMLSpanElement | null>(null);
+
+  // ← NOUVEAU : position pixel du trou du "e" (calculée au moment du dive)
+  // [x, y] en coordonnées CSS (0,0 = haut-gauche)
+  const eHolePosRef = useRef<readonly [number, number]>([
+    window.innerWidth * 0.38,    // Estimation initiale : ~38% de la largeur
+    window.innerHeight * 0.47,   // ~47% de la hauteur (centre approximatif du titre)
+  ]);
 
   useEffect(() => {
     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     dispatch({ type: 'INIT_TOUCH_DEVICE', isTouchDevice: isTouch });
   }, []);
 
-  const handleTitleAnimationComplete = useCallback(() => {
+  // ← NOUVEAU : quand on commence à plonger, on mesure la vraie position du "e"
+  useEffect(() => {
+    if (state.dotAnimationState === 'diving') {
+      // Cherche le premier "e" dans le titre (qui sera le "e" de "Greg")
+      const eSpan = document.querySelector<HTMLElement>('[data-letter-text="e"]');
+      if (eSpan) {
+        const rect = eSpan.getBoundingClientRect();
+        // Centre de la bounding box du "e"
+        const cx = rect.left + rect.width / 2;
+        // Le counter (trou) du "e" est approximativement au centre vertical de la lettre
+        // Légèrement vers le haut (55% depuis le bas) pour pointer dans le trou réel
+        const cy = rect.bottom - rect.height * 0.55;
+        eHolePosRef.current = [cx, cy];
+      }
+      // Si le querySelector ne trouve rien (lettres pas encore rendues / autre balisage),
+      // eHolePosRef garde sa valeur estimée — le plongeon reste visuellement cohérent.
+    }
+  }, [state.dotAnimationState]);
+
+  const handleTitleAnimationComplete = useCallback((): void => {
     dispatch({ type: 'SHOW_ENTER_MESSAGE' });
   }, []);
 
-  const handleUserInteraction = useCallback(() => {
+  const handleUserInteraction = useCallback((): void => {
+    if (state.menuOpen || state.panelVisible || state.aboutVisible) return;
     if (!state.hasStartedWiggle) {
-      console.log('Starting wiggle sequence');
       dispatch({ type: 'START_WIGGLE_SEQUENCE' });
     }
-  }, [state.hasStartedWiggle]);
+  }, [state.menuOpen, state.panelVisible, state.aboutVisible, state.hasStartedWiggle]);
+
+  const handleMenuClose = useCallback((): void => {
+    dispatch({ type: 'START_CLOSE' });
+  }, []);
+
+  const handleNavigateToSection = useCallback((section: SectionId): void => {
+    dispatch({ type: 'NAVIGATE_TO_SECTION', section });
+  }, []);
+
+  const handlePanelClosed = useCallback((): void => {
+    dispatch({ type: 'PANEL_CLOSED' });
+  }, []);
+
+  // ← NOUVEAU : depuis AboutPage, déclenche la remontée
+  const handleAboutBack = useCallback((): void => {
+    dispatch({ type: 'START_SURFACE' });
+  }, []);
 
   const handleDotAnimationComplete = useCallback((
-    previousState: DotAnimationState
-  ) => {
-    console.log(`✅ Animation terminée: ${previousState}`);
-    
-    const transitions: Record<DotAnimationState, () => void> = {
-      fadeIn: () => {
-        console.log('FadeIn complete - waiting for user interaction');
-      },
+    previousState: DotAnimationState,
+  ): void => {
+    const transitions: Partial<Record<DotAnimationState, () => void>> = {
+      fadeIn: () => { /* attend interaction */ },
+      idle: () => { /* stable */ },
+      expanded: () => { /* fond violet stable */ },
       wiggle1: () => {
-        console.log('Wiggle1 complete -> pause');
         dispatch({ type: 'TRANSITION_TO', nextState: 'pause' });
       },
       pause: () => {
-        console.log('Pause complete -> wiggle2');
         setTimeout(() => {
           dispatch({ type: 'TRANSITION_TO', nextState: 'wiggle2' });
         }, 1000);
       },
       wiggle2: () => {
-        console.log('Wiggle2 complete -> secondPause');
         setTimeout(() => {
           dispatch({ type: 'TRANSITION_TO', nextState: 'secondPause' });
         }, 1000);
       },
       secondPause: () => {
-        console.log('SecondPause complete -> expand');
         dispatch({ type: 'START_EXPANSION' });
       },
       expand: () => {
-        console.log('🔵 EXPAND COMPLETE - Starting contraction');
-        
-        setTimeout(() => {
-          console.log('🔴 Starting contraction and hiding elements');
-          dispatch({ type: 'HIDE_ELEMENTS' });
-          dispatch({ type: 'START_CONTRACTION' });
-        }, 2500);
+        dispatch({ type: 'SHOW_MENU' });
       },
       contract: () => {
-        console.log('✅ CONTRACT COMPLETE - Animation fully finished');
-        dispatch({ type: 'COMPLETE_ANIMATION' });
-        
-        setTimeout(() => {
-          console.log('🎯 Calling onFinish');
-          onFinish?.();
-        }, 500);
+        dispatch({ type: 'RESET_TO_IDLE' });
+      },
+      // ← NOUVEAUX handlers
+      diving: () => {
+        dispatch({ type: 'DIVE_COMPLETE' });
+      },
+      surfacing: () => {
+        dispatch({ type: 'SURFACE_COMPLETE' });
       },
     };
 
     const transition = transitions[previousState];
-    transition();
-  }, [onFinish]);
+    if (transition) transition();
+  }, []);
 
-  useEffect(() => {
-    console.log('Current animation state:', state.dotAnimationState);
-  }, [state.dotAnimationState]);
-
-  const containerStyle = {
+  const containerStyle: React.CSSProperties = {
     backgroundColor: state.hasOverlayBackground ? '#FEFEFE' : 'transparent',
     transition: 'background-color 0.5s ease-out',
   };
 
+  const isInteractive =
+    !state.menuOpen &&
+    !state.panelVisible &&
+    !state.aboutVisible && // ← NOUVEAU
+    state.dotAnimationState !== 'expand' &&
+    state.dotAnimationState !== 'expanded' &&
+    state.dotAnimationState !== 'contract' &&
+    state.dotAnimationState !== 'wiggle1' &&
+    state.dotAnimationState !== 'wiggle2' &&
+    state.dotAnimationState !== 'pause' &&
+    state.dotAnimationState !== 'secondPause' &&
+    state.dotAnimationState !== 'diving' &&     // ← NOUVEAU
+    state.dotAnimationState !== 'surfacing';    // ← NOUVEAU
+
   return (
     <div
       className="overlay__container"
-      onClick={handleUserInteraction}
+      onClick={isInteractive ? handleUserInteraction : undefined}
       style={containerStyle}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+      onKeyDown={(e): void => {
+        if (isInteractive && (e.key === 'Enter' || e.key === ' ')) {
           handleUserInteraction();
         }
       }}
-      aria-label="Cliquez pour entrer dans le site"
+      aria-label="Cliquez pour ouvrir le menu"
     >
-      <div className='overlay__title-wrapper'>
-        {state.showTitle && (
-          <IntroTitle 
-            text='Greg' 
-            handleTitleAnimationComplete={handleTitleAnimationComplete} 
-          />
-        )}
-        
-        <IntroDot
-          variant={dotVariants}
-          animationState={state.dotAnimationState}
-          handleDotAnimationComplete={handleDotAnimationComplete}
+      <div className="overlay__title-wrapper">
+        <IntroTitle
+          text="Greg"
+          visible={state.titlesVisible}
+          skipAnimation={state.hasCompletedFirstOpen}
+          handleTitleAnimationComplete={handleTitleAnimationComplete}
         />
-        
-        {state.showTitle && (
-          <IntroTitle 
-            text='GS' 
-            handleTitleAnimationComplete={handleTitleAnimationComplete} 
-          />
-        )}
+
+        <span
+          ref={dotPlaceholderRef}
+          className="overlay__title-dot--placeholder"
+          role="presentation"
+          aria-hidden="true"
+        />
+
+        <IntroTitle
+          text="GS"
+          visible={state.titlesVisible}
+          skipAnimation={state.hasCompletedFirstOpen}
+          handleTitleAnimationComplete={handleTitleAnimationComplete}
+        />
       </div>
-      
-      {state.showEnterMessage && state.dotAnimationState === 'fadeIn' && (
-        <IntroEnterMessage isTouchDevice={state.isTouchDevice} />
-      )}
+
+      <DotCanvas
+        dotState={state.dotAnimationState}
+        menuOpen={state.menuOpen}
+        placeholderRef={dotPlaceholderRef}
+        onAnimationComplete={handleDotAnimationComplete}
+        eHolePos={eHolePosRef.current}
+      />
+
+      {state.showEnterMessage &&
+        (state.dotAnimationState === 'fadeIn' ||
+          state.dotAnimationState === 'idle') && (
+          <IntroEnterMessage isTouchDevice={state.isTouchDevice} />
+        )}
+
+      <OverlayMenu
+        isVisible={state.menuOpen}
+        onClose={handleMenuClose}
+        onNavigate={handleNavigateToSection}
+      />
+
+      <ContentPanel
+        isVisible={state.panelVisible}
+        section={state.activeSection}
+        onClosed={handlePanelClosed}
+      />
+
+      {/* ← NOUVEAU : page About avec plongeon */}
+      <AboutPage
+        isVisible={state.aboutVisible}
+        onBack={handleAboutBack}
+      />
     </div>
   );
 };

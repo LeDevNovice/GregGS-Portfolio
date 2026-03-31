@@ -1,0 +1,98 @@
+.about-page {
+  position: fixed;
+  inset: 0;
+  background-color: #fefefe;
+  z-index: 20;
+  /* Au-dessus du Canvas R3F (z-index 5) */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+/* ── Bouton retour ── */
+.about-page__back {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: #444;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.5rem;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.about-page__back:hover {
+  color: #792262;
+  transform: translateX(-3px);
+}
+
+.about-page__back-arrow {
+  font-size: 1.1rem;
+  transition: transform 0.2s ease;
+}
+
+.about-page__back:hover .about-page__back-arrow {
+  transform: translateX(-3px);
+}
+
+/* ── Contenu ── */
+.about-page__content {
+  max-width: 640px;
+  width: 100%;
+}
+
+.about-page__title {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 2rem;
+  letter-spacing: -0.02em;
+}
+
+.about-page__paragraph {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #555;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Placeholders ── */
+.about-page__sections {
+  margin-top: 3rem;
+}
+
+.about-page__section-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.about-page__placeholder-line {
+  height: 0.8rem;
+  background: #ebebeb;
+  border-radius: 4px;
+  animation: placeholder-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes placeholder-pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}

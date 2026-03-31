@@ -1,58 +1,47 @@
-import { Variant, Variants } from 'framer-motion';
-
-export interface AnimationProps {
-    animateExit: boolean;
-    duration?: number;
-    delay?: number;
-}
+export type SectionId = 'about' | 'publications' | 'projects';
 
 export type DotAnimationState =
-    | 'fadeIn'
-    | 'wiggle1'
-    | 'pause'
-    | 'wiggle2'
-    | 'secondPause'
-    | 'expand'
-    | 'contract';
+  | 'fadeIn'
+  | 'idle'
+  | 'wiggle1'
+  | 'pause'
+  | 'wiggle2'
+  | 'secondPause'
+  | 'expand'
+  | 'expanded'
+  | 'contract'
+  | 'diving'
+  | 'surfacing';
 
-export interface DotVariants extends Variants {
-    hidden: Variant;
-    fadeIn: Variant;
-    wiggle1: Variant;
-    pause: Variant;
-    wiggle2: Variant;
-    secondPause: Variant;
-    expand: Variant;
-    contract: Variant;
-}
+export interface IntroOverlayProps {}
 
-export interface HomePageMenuProps extends Pick<AnimationProps, 'animateExit'> {
-    onAboutClick: () => void;
-}
-export interface HomePageBackgroundProps {
-    animateExit: boolean;
-}
-export type HomePageTitleProps = Pick<AnimationProps, 'animateExit'>
-export type HomePageFooterProps = Pick<AnimationProps, 'animateExit'>
-export type HomePageSocialsProps = Pick<AnimationProps, 'animateExit'>
-
-export interface IntroOverlayProps {
-    onFinish?: () => void;
-}
 export interface IntroTitleProps {
-    text: string;
-    handleTitleAnimationComplete: () => void;
-}
-export interface IntroDotProps {
-    variant: DotVariants;
-    animationState: DotAnimationState;
-    handleDotAnimationComplete: (animationName: DotAnimationState) => void;
-}
-export interface IntroEnterMessageProps {
-    isTouchDevice: boolean;
+  text: string;
+  visible: boolean;
+  skipAnimation: boolean;
+  handleTitleAnimationComplete: () => void;
 }
 
-export type HomeProps = Record<string, never>;
+export interface IntroEnterMessageProps {
+  isTouchDevice: boolean;
+}
+
+export interface OverlayMenuProps {
+  onClose: () => void;
+  onNavigate: (section: SectionId) => void;
+  isVisible: boolean;
+}
+
+export interface ContentPanelProps {
+  isVisible: boolean;
+  section: SectionId | null;
+  onClosed: () => void;
+}
+
+export interface PanelDotProps {
+  onClick: () => void;
+}
+
 export type AboutProps = Record<string, never>;
 
 export type NavigationHandler = () => void;
